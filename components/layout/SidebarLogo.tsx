@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { BsTweetor } from "react-icons/bs";
+import { BsTwitter } from "react-icons/bs";
 
 const SidebarLogo = () => {
   const router = useRouter();
@@ -19,7 +19,7 @@ const SidebarLogo = () => {
         hover:bg-opacity-10 
         cursor-pointer
     ">
-      <BsTweetor size={28} color="white" />
+      <BsTwitter size={28} color="white" />
     </div>
   );
 };
