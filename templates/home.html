@@ -9,33 +9,37 @@
     <div>
       <h1 class="u-full-width txt-centered">Tweeter</h1>
     </div>
-    <div class="row">
-      <div class="six columns offset-by-three">
-        <form action="/submit_tweet" method="post">
-          <div class="row">
-            <div class="twelve columns">
-              <label for="content">What's happening?</label>
-              <input type="text" name="content" id="content" class="u-full-width" placeholder="Type your tweet here">
+    {% if loggedIn %}
+      <div class="row">
+        <div class="six columns offset-by-three">
+          <form action="/submit_tweet" method="post">
+            <div class="row">
+              <div class="twelve columns">
+                <label for="content">What's happening?</label>
+                <input type="text" name="content" id="content" class="u-full-width" placeholder="Type your tweet here">
+              </div>
             </div>
-          </div>
-          <div class="row">
-            <div class="twelve columns">
-              <button type="submit" class="button-primary">Tweet</button>
+            <div class="row">
+              <div class="twelve columns">
+                <button type="submit" class="button-primary">Tweet</button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </div>
+    {% endif %}
     <div class="row">
       <div class="six columns offset-by-three">
         <div class="text-center">
           {% for tweet in tweets %}
             <div class="row">
               <div class="twelve columns">
+                <a href="/user/{{ tweet.user }}">{{ tweet.user }}</a>
                 <p>{{ tweet.content }}</p>
                 <p><small>{{ tweet.timestamp }}</small></p>
               </div>
             </div>
+            <hr>
           {% endfor %}
         </div>
       </div>

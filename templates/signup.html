@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Signup | Tweeter</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
+	<style>
+		.centered-form {
+			margin: auto;
+			width: 50%;
+			padding: 10px;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="centered-form">
+			<h2>Signup for Tweeter</h2>
+			<form method="POST" action="{{ url_for('login') }}">
+				<label for="username">Username:</label>
+				<input type="text" id="username" name="username" required><br><br>
+				<label for="password">Password:</label>
+				<input type="password" id="password" name="password" required><br><br>
+				<label for="password">Password Conformation:</label>
+				<input type="password" id="passwordConformation" name="passwordConformation" required><br><br>
+				<input type="submit" value="Login">
+			</form>
+		</div>
+	</div>
+</body>
+</html>

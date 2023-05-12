@@ -6,12 +6,30 @@ import hashlib
 app = Flask(__name__)
 app.secret_key = "super secret key"
 
+
+
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-DATABASE = 'tweeter.db'
+DATABASE = 'tweetor.db'
+
+sqlite3.connect(DATABASE).cursor().execute('''
+    CREATE TABLE IF NOT EXISTS tweets  (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user TEXT NOT NULL
+)
+''')
+sqlite3.connect(DATABASE).cursor().execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+    )
+''')
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -32,34 +50,51 @@ def home():
     cursor = db.cursor()
     cursor.execute('SELECT * FROM tweets ORDER BY timestamp DESC')
     tweets = cursor.fetchall()
-    return render_template('home.html', tweets=tweets)
+    return render_template('home.html', tweets=tweets, loggedIn=(session["username"]))
 
 @app.route('/submit_tweet', methods=['POST'])
 def submit_tweet():
     content = request.form['content']
     db = get_db()
     cursor = db.cursor()
-    cursor.execute('INSERT INTO tweets (content) VALUES (?)', (content,))
+    cursor.execute('INSERT INTO tweets (content, user) VALUES (?, ?)', (content, session["username"],))
     db.commit()
     return redirect(url_for('home'))
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/signup", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
+        passwordConformation = request.form["passwordConformation"]
+
+        if password != passwordConformation:
+            return redirect("/signup")
+        
+        conn = get_db()
+
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute('SELECT * FROM users WHERE username = ?', (username, ))
+        
+        if len(cursor.fetchall()) != 0:
+            return redirect("/signup")
+        
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        conn = sqlite3.connect("tweets.db")
         c = conn.cursor()
         c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
         conn.commit()
         conn.close()
+        
+
 
         session["username"] = username
         return redirect("/")
     else:
-        return render_template("login.html")
+        if session["username"]:
+            return redirect('/')
+        return render_template("signup.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
