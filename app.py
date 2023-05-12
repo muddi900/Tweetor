@@ -1,11 +1,22 @@
 from flask import Flask, render_template, request, redirect, url_for, session, g
 from flask_session import Session
+from flask_mail import Mail, Message
 import sqlite3
 import hashlib
-
+import random
 app = Flask(__name__)
 app.secret_key = "super secret key"
 
+# Configure Flask-Mail settings
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'tweetor-official@gmail.com'  # Enter your Gmail address
+app.config['MAIL_PASSWORD'] = 'tweetorGoodPigeonismGoodSushismSucksTweetorGoodDoNotUseTwitterWeAreBetterUseTweetorNowOrElseYouWillBeForcedIntoPigeonism'  # Enter your Gmail password
+app.config['MAIL_DEFAULT_SENDER'] = 'your-email@gmail.com'
+
+# Initialize Flask-Mail extension
+mail = Mail(app)
 
 
 # Set up the session object
@@ -27,9 +38,14 @@ sqlite3.connect(DATABASE).cursor().execute('''
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        verified BIT NOT NULL
     )
 ''')
+                                           
+# Generate a verification code
+def generate_code():
+    return str(random.randint(100000, 999999))
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -62,7 +78,7 @@ def submit_tweet():
     return redirect(url_for('home'))
 
 @app.route("/signup", methods=["GET", "POST"])
-def login():
+def signup():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -83,11 +99,20 @@ def login():
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         c = conn.cursor()
-        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_password))
+        c.execute("INSERT INTO users (username, password, verified) VALUES (?, ?, 0)", (username, hashed_password))
         conn.commit()
         conn.close()
         
+        
+        # Generate a verification code
+        code = generate_code()
 
+        # Create the verification message
+        msg = Message('Tweeter Email Verification', recipients=[email])
+        msg.body = f'Your verification code is: {code}'
+
+        # Send the message using Flask-Mail
+        mail.send(msg)
 
         session["username"] = username
         return redirect("/")
