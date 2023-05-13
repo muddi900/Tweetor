@@ -103,17 +103,6 @@ def signup():
         conn.commit()
         conn.close()
         
-        
-        # Generate a verification code
-        code = generate_code()
-
-        # Create the verification message
-        msg = Message('Tweeter Email Verification', recipients=[email])
-        msg.body = f'Your verification code is: {code}'
-
-        # Send the message using Flask-Mail
-        mail.send(msg)
-
         session["username"] = username
         return redirect("/")
     else:
@@ -122,4 +111,4 @@ def signup():
         return render_template("signup.html")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
