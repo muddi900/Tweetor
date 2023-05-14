@@ -10,15 +10,13 @@
     <div class="container">
       <div class="centered">
         <div class="centered-form">
-          <h2>Signup for Tweeter</h2>
-          <form method="POST" action="{{ url_for('signup') }}">
+          <h2>Login to Tweeter</h2>
+          <form method="POST" action="{{ url_for('login') }}">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
-            <label for="passwordConformation">Password Confirmation:</label>
-            <input type="password" id="passwordConformation" name="passwordConformation" required>
-            <input type="submit" value="Signup">
+            <input type="submit" value="Login">
           </form>
         </div>
       </div>

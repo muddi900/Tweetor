@@ -6,9 +6,34 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   </head>
   <body>
-    <div>
-      <h1 class="u-full-width txt-centered">Tweeter</h1>
+    <div class="top-row">
+      <div class="logo">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
+      </div>
+      {% if not loggedIn %}
+      <div>
+        <div class="login">
+          <a href="{{ url_for('login') }}">
+            <button>Login</button>
+          </a>
+        </div>
+        <div class="signup">
+          <a href="{{ url_for('signup') }}">
+            <button>Signup</button>
+          </a>
+        </div>
+      </div>
+      {% else %}
+        <div class="logout">
+          <a href="{{ url_for('logout') }}">
+            <button>Logout</button>
+          </a>
+        </div>
+      {% endif %}
     </div>
+    <br>
+    <br>
+    <br>
     {% if loggedIn %}
       <div class="row">
         <div class="six columns offset-by-three">
@@ -28,15 +53,17 @@
         </div>
       </div>
     {% endif %}
+    <br>
+    <br>
+    <br>
     <div class="row">
       <div class="six columns offset-by-three">
-        <div class="text-center">
+        <div class="text-center tweets">
           {% for tweet in tweets %}
             <div class="row">
               <div class="twelve columns">
                 <a href="/user/{{ tweet.user }}">{{ tweet.user }}</a>
                 <p>{{ tweet.content }}</p>
-                <p><small>{{ tweet.timestamp }}</small></p>
               </div>
             </div>
             <hr>

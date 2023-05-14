@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>User Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <div class="top-row">
+        <div class="logo">
+          <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
+        </div>
+        {% if not loggedIn %}
+        <div>
+          <div class="login">
+            <a href="{{ url_for('login') }}">
+              <button>Login</button>
+            </a>
+          </div>
+          <div class="signup">
+            <a href="{{ url_for('signup') }}">
+              <button>Signup</button>
+            </a>
+          </div>
+        </div>
+        {% else %}
+          <div class="logout">
+            <a href="{{ url_for('logout') }}">
+              <button>Logout</button>
+            </a>
+          </div>
+        {% endif %}
+      </div>
+      <br>
+      <br>
+      <br>
+    <div class="container">
+      <div class="row">
+        <div class="twelve columns">
+          <h1>{{ user.username }}'s Profile</h1>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="twelve columns">
+          <h2>Tweets</h2>
+          <ul>
+            <hr>
+            {% for tweet in tweets %}
+              <div>
+                <h4>{{ user.username }}</h4>
+                <span>{{ tweet.content }}</span>
+                <hr>
+              </div>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

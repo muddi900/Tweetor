@@ -9,3 +9,88 @@
 .txt-centered {
     text-align: center;
 }
+
+.top-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	height: 50px;
+	padding: 10px;
+	background-color: #1da1f2;
+  margin: 0 auto;
+}
+
+.logo img {
+	height: 60px;
+}
+
+.logout form, .login form, .signup form {
+  display: flex;
+  align-items: center;
+}
+
+.logout button,  .login button, .signup button {
+	background-color: transparent;
+	border: none;
+	color: white;
+	font-size: 16px;
+	cursor: pointer;
+  margin: 0 auto;
+  display: block;
+}
+
+.centered-form {
+  margin: auto;
+  width: 400px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.centered-form h2 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #1da1f2;
+}
+
+.centered-form label {
+  display: block;
+  text-align: left;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+.centered-form input[type="text"],
+.centered-form input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: #555;
+}
+
+.centered-form input[type="submit"] {
+  background-color: #1da1f2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  /* padding: 10px 20px 10px 20px; */
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.centered-form input[type="submit"]:hover {
+  background-color: #0c8bd6;
+}
+
+body {
+  background-color: black;
+  color: white;
+}
