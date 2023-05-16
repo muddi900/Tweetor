@@ -4,6 +4,7 @@
     <title>Tweeter - Home</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
   </head>
   <body>
     <div class="top-row">
@@ -42,6 +43,7 @@
               <div class="twelve columns">
                 <label for="content">What's happening?</label>
                 <input type="text" name="content" id="content" class="u-full-width" placeholder="Type your tweet here">
+                <input type="text" name="hashtag" id="hashtag" class="u-full-width" placeholder="Hashtag">
               </div>
             </div>
             <div class="row">
@@ -62,8 +64,11 @@
           {% for tweet in tweets %}
             <div class="row">
               <div class="twelve columns">
-                <a href="/user/{{ tweet.user }}">{{ tweet.user }}</a>
-                <p>{{ tweet.content }}</p>
+                <div class="tweet">
+                  <div class="tweet-username"><a href="/user/{{ tweet.user }}">{{ tweet.user }}</a></div>
+                  <div class="tweet-content">{{ tweet.content }}</div>
+                  <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
+                </div>
               </div>
             </div>
             <hr>

@@ -20,10 +20,11 @@ sqlite3.connect(DATABASE).cursor().execute(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    user TEXT NOT NULL
+    user TEXT NOT NULL,
+    hashtag TEXT NOT NULL
 )
-"""
-)
+""")
+
 sqlite3.connect(DATABASE).cursor().execute(
     """
     CREATE TABLE IF NOT EXISTS users (
@@ -31,8 +32,17 @@ sqlite3.connect(DATABASE).cursor().execute(
         username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL
     )
-"""
-)
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS interests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT NOT NULL UNIQUE,
+        hashtag TEXT NOT NULL,
+        importance INT NOT NULL
+    )
+""")
 
 # Generate a verification code
 def generate_code():
@@ -66,13 +76,15 @@ def home():
 @app.route("/submit_tweet", methods=["POST"])
 def submit_tweet():
     content = request.form["content"]
+    hashtag = request.form["hashtag"]
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO tweets (content, user) VALUES (?, ?)",
+        "INSERT INTO tweets (content, user, hashtag) VALUES (?, ?, ?)",
         (
             content,
             session["username"],
+            hashtag,
         ),
     )
     db.commit()
@@ -159,6 +171,49 @@ def user_profile(username):
 
     # If the user doesn't exist, display an error message
     return "User not found"
+
+@app.route('/tweets/<tweetId>')
+def singleTweet(tweetId):
+    conn = get_db()
+    c = conn.cursor()
+
+    # Get the tweet's information from the database
+    c.execute("SELECT hashtag FROM tweets WHERE id=?", (tweetId,))
+    tweet = c.fetchone()
+
+    if tweet:
+        if "username" in session:
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("SELECT * FROM interests WHERE user=? AND hashtag=?", (session["username"], tweet, ))
+            interests = c.fetchall()
+            if len(interests) == 0:
+                conn = get_db()
+                c = conn.cursor()
+                c.execute("INSERT INTO interests (user, hashtag, importance) VALUES (?, ?, ?)", (
+                    session["username"],
+                    tweet,
+                    1,
+                ))
+                
+                conn.commit()
+                conn.close()
+            else:
+                conn = get_db()
+                c = conn.cursor()
+                c.execute("UPDATE interests SET importance=? WHERE user=? AND hashtag=?", (
+                    interests[0].importance+1,
+                    session["username"],
+                    tweet,
+                ))
+                conn.commit()
+                conn.close()
+                
+        # Render the template with the tweet's information
+        return render_template("tweet.html", tweet=tweet)
+
+    # If the user doesn't exist, display an error message
+    return "Tweet not found"
 
 @app.route('/logout', methods=["GET", "POST"])
 def logout():
