@@ -29,7 +29,8 @@ sqlite3.connect(DATABASE).cursor().execute(
     """
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
+        username TEXT NOT NULL,
+        handle TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL
     )
 """)
@@ -83,7 +84,7 @@ def submit_tweet():
         "INSERT INTO tweets (content, user, hashtag) VALUES (?, ?, ?)",
         (
             content,
-            session["username"],
+            session["handle"],
             hashtag,
         ),
     )
@@ -95,6 +96,7 @@ def submit_tweet():
 def signup():
     if request.method == "POST":
         username = request.form["username"]
+        handle = username
         password = request.form["password"]
         passwordConformation = request.form["passwordConformation"]
 
@@ -108,18 +110,19 @@ def signup():
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
 
         if len(cursor.fetchall()) != 0:
-            return redirect("/signup")
+            handle = f"{username}{len(cursor.fetchall())}"
 
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
         c = conn.cursor()
         c.execute(
-            "INSERT INTO users (username, password) VALUES (?, ?)",
-            (username, hashed_password),
+            "INSERT INTO users (username, password, handle) VALUES (?, ?, ?)",
+            (username, hashed_password, handle),
         )
         conn.commit()
         conn.close()
 
+        session["handle"] = handle
         session["username"] = username
         return redirect("/")
     if "username" in session:
@@ -130,12 +133,12 @@ def signup():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form["username"]
+        handle = request.form["handle"]
         password = request.form["password"]
 
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT password FROM users WHERE username = ?", (username,))
+        cursor.execute("SELECT password FROM users WHERE handle = ?", (handle,))
 
         passwords = cursor.fetchall()
         if len(passwords) == 0:
@@ -143,6 +146,7 @@ def login():
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         # print((passwords[0][0]) == (hashed_password))
         if passwords[0][0] == hashed_password:
+            session["handle"] = handle
             session["username"] = username
             print("logged in")
         return redirect("/")
@@ -178,21 +182,23 @@ def singleTweet(tweetId):
     c = conn.cursor()
 
     # Get the tweet's information from the database
-    c.execute("SELECT hashtag FROM tweets WHERE id=?", (tweetId,))
+    c.execute("SELECT * FROM tweets WHERE id=?", (tweetId,))
     tweet = c.fetchone()
+
+    print(tweet["hashtag"])
 
     if tweet:
         if "username" in session:
             conn = get_db()
             c = conn.cursor()
-            c.execute("SELECT * FROM interests WHERE user=? AND hashtag=?", (session["username"], tweet, ))
+            c.execute("SELECT * FROM interests WHERE user=? AND hashtag=?", (session["handle"], tweet["hashtag"], ))
             interests = c.fetchall()
             if len(interests) == 0:
                 conn = get_db()
                 c = conn.cursor()
                 c.execute("INSERT INTO interests (user, hashtag, importance) VALUES (?, ?, ?)", (
-                    session["username"],
-                    tweet,
+                    session["handle"],
+                    tweet["hashtag"],
                     1,
                 ))
                 
@@ -202,12 +208,14 @@ def singleTweet(tweetId):
                 conn = get_db()
                 c = conn.cursor()
                 c.execute("UPDATE interests SET importance=? WHERE user=? AND hashtag=?", (
-                    interests[0].importance+1,
-                    session["username"],
-                    tweet,
+                    interests[0]["importance"]+1,
+                    session["handle"],
+                    tweet["hashtag"],
                 ))
                 conn.commit()
                 conn.close()
+
+        print(tweet)
                 
         # Render the template with the tweet's information
         return render_template("tweet.html", tweet=tweet)
@@ -218,6 +226,7 @@ def singleTweet(tweetId):
 @app.route('/logout', methods=["GET", "POST"])
 def logout():
     if "username" in session:
+        del session["handle"]
         del session["username"]
     return redirect("/")
 

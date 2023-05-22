@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>{% block title %}{% endblock %} | Tweeter</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
+    <meta name="keywords" content="Social Media, Twitter, Tweetor">
+    <meta name="description" content="Non-toxic social media friendly to all with algorithms that stop toxic behavior">
+    <meta name="author" content="Heinrich Xiao">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+	<div class="top-row">
+		<div class="logo">
+            <a href="/">
+		        <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
+            </a>
+		</div>
+		{% if not loggedIn %}
+		<div>
+		  <div class="login">
+			<a href="{{ url_for('login') }}">
+			  <button>Login</button>
+			</a>
+		  </div>
+		  <div class="signup">
+			<a href="{{ url_for('signup') }}">
+			  <button>Signup</button>
+			</a>
+		  </div>
+		</div>
+		{% else %}
+		  <div class="logout">
+			<a href="{{ url_for('logout') }}">
+			  <button>Logout</button>
+			</a>
+		  </div>
+		{% endif %}
+	</div>
+    {% block body %}
+
+    {% endblock %}
+</body>
+</html>
