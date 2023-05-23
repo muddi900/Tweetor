@@ -9,6 +9,23 @@
     text-align: center;
 }
 
+.tweet-content-input.tweet-content-input, .tweet-content-input.tweet-content-input:focus {
+  border-radius: 0%;
+  border-width: 0px;
+  border: none;
+  border-style: none; 
+  outline:none;
+  background-color: black;
+  color: #fff;
+  font-size: x-large;
+  height: 10em;
+  width: 100%;
+  
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+}
+
 .top-row {
 	display: flex;
 	flex-direction: row;

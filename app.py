@@ -1,11 +1,17 @@
 import sqlite3
 import hashlib
 import random
+import filters
+from datetime import datetime
+from jinja2 import Environment, PackageLoader
 from flask import Flask, render_template, request, redirect, url_for, session, g
 from flask_session import Session
 
 app = Flask(__name__)
 app.secret_key = "super secret key"
+
+# Register the custom filters
+app.jinja_env.filters['format_timestamp'] = filters.format_timestamp
 
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False
@@ -78,6 +84,11 @@ def home():
 @app.route("/submit_tweet", methods=["POST"])
 def submit_tweet():
     content = request.form["content"]
+    if len(content) > 280:
+        return redirect("/")
+    print(session)
+    if "username" not in session:
+        return redirect("/")
     hashtag = request.form["hashtag"]
     db = get_db()
     cursor = db.cursor()
