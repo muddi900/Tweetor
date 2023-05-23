@@ -20,7 +20,8 @@ sqlite3.connect(DATABASE).cursor().execute(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     content TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    user TEXT NOT NULL,
+    userHandle TEXT NOT NULL,
+    username TEXT NOT NULL,
     hashtag TEXT NOT NULL
 )
 """)
@@ -81,10 +82,11 @@ def submit_tweet():
     db = get_db()
     cursor = db.cursor()
     cursor.execute(
-        "INSERT INTO tweets (content, user, hashtag) VALUES (?, ?, ?)",
+        "INSERT INTO tweets (content, userHandle, username, hashtag) VALUES (?, ?, ?, ?)",
         (
             content,
             session["handle"],
+            session["username"],
             hashtag,
         ),
     )
@@ -138,16 +140,17 @@ def login():
 
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT password FROM users WHERE handle = ?", (handle,))
+        cursor.execute("SELECT * FROM users WHERE handle = ?", (handle,))
 
-        passwords = cursor.fetchall()
-        if len(passwords) == 0:
+        users = cursor.fetchall()
+        if len(users) != 1:
             return redirect("/login")
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         # print((passwords[0][0]) == (hashed_password))
-        if passwords[0][0] == hashed_password:
+        if users[0]["password"] == hashed_password:
             session["handle"] = handle
-            session["username"] = username
+            session["username"] = users[0]["username"]
+            print(users[0]["username"])
             print("logged in")
         return redirect("/")
     if "username" in session:
@@ -161,12 +164,12 @@ def user_profile(username):
     c = conn.cursor()
 
     # Get the user's information from the database
-    c.execute("SELECT * FROM users WHERE username=?", (username,))
+    c.execute("SELECT * FROM users WHERE handle=?", (username,))
     user = c.fetchone()
 
     if user:
         # Get the user's tweets from the database
-        c.execute("SELECT * FROM tweets WHERE user=?", (username,))
+        c.execute("SELECT * FROM tweets WHERE userHandle=?", (username,))
         tweets = c.fetchall()
         print(tweets[0])
 
@@ -226,8 +229,8 @@ def singleTweet(tweetId):
 @app.route('/logout', methods=["GET", "POST"])
 def logout():
     if "username" in session:
-        del session["handle"]
-        del session["username"]
+        session.pop('handle', None)
+        session.pop('username', None)
     return redirect("/")
 
 if __name__ == "__main__":

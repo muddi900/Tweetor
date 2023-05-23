@@ -106,13 +106,20 @@ body {
 }
 
 .tweet-username a, .tweet-content a {
-  color: #fff;
   text-decoration: none;
 }
 
 .tweet-username a:hover, .tweet-content a:hover {
-  color: #fff;
   text-decoration: underline;
+}
+
+.tweet-username a:not(.user-handle), .tweet-content a, .tweet-content a:hover {
+  color: #fff;
+}
+
+.user-handle, .user-handle:hover {
+  color: #888;
+  font-weight: normal;
 }
 
 .tweet-username {

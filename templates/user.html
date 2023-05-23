@@ -19,9 +19,12 @@
       <ul>
         {% for tweet in tweets %}
           <div class="tweet">
-            <div class="tweet-username"><a href="/user/{{ tweet.user }}">{{ tweet.user }}</a></div>
+            <div class="tweet-username">
+            <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+            <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+            </div>
             <div class="tweet-content">
-              <a href="tweets/{{ tweet.id }}">{{ tweet.content }}</a>
+            <a href="/tweets/{{ tweet.id }}">{{ tweet.content }} {{ tweet.hashtag }}</a>
             </div>
             <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
           </div>
