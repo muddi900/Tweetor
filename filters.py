@@ -6,8 +6,8 @@ def format_timestamp(value):
     
     # Format the datetime object
     if timestamp.year != datetime.now().year:
-        formatted_timestamp = timestamp.strftime("%B %dth, %Y")
+        formatted_timestamp = timestamp.strftime("%B %d, %Y")
     else:
-        formatted_timestamp = timestamp.strftime("%B %dth")
+        formatted_timestamp = timestamp.strftime("%B %d")
 
     return formatted_timestamp
