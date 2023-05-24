@@ -2,9 +2,7 @@ import sqlite3
 import hashlib
 import random
 import filters
-from datetime import datetime
-from jinja2 import Environment, PackageLoader
-from flask import Flask, render_template, request, redirect, url_for, session, g
+from flask import Flask, Response, render_template, request, redirect, url_for, session, g
 from flask_session import Session
 
 app = Flask(__name__)
@@ -52,11 +50,6 @@ sqlite3.connect(DATABASE).cursor().execute(
     )
 """)
 
-# Generate a verification code
-def generate_code():
-    return str(random.randint(100000, 999999))
-
-
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
@@ -73,7 +66,7 @@ def close_connection(exception):
 
 
 @app.route("/")
-def home():
+def home() -> Response:
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
@@ -82,7 +75,7 @@ def home():
 
 
 @app.route("/submit_tweet", methods=["POST"])
-def submit_tweet():
+def submit_tweet() -> Response:
     content = request.form["content"]
     if len(content) > 280:
         return redirect("/")
@@ -106,7 +99,7 @@ def submit_tweet():
 
 # Signup route
 @app.route("/signup", methods=["GET", "POST"])
-def signup():
+def signup() -> Response:
     if request.method == "POST":
         username = request.form["username"]
         handle = username
@@ -144,7 +137,7 @@ def signup():
 
 # Login route
 @app.route("/login", methods=["GET", "POST"])
-def login():
+def login() -> Response:
     if request.method == "POST":
         handle = request.form["handle"]
         password = request.form["password"]
@@ -157,12 +150,9 @@ def login():
         if len(users) != 1:
             return redirect("/login")
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
-        # print((passwords[0][0]) == (hashed_password))
         if users[0]["password"] == hashed_password:
             session["handle"] = handle
             session["username"] = users[0]["username"]
-            print(users[0]["username"])
-            print("logged in")
         return redirect("/")
     if "username" in session:
         return redirect("/")
@@ -170,7 +160,7 @@ def login():
 
 
 @app.route('/user/<username>')
-def user_profile(username):
+def user_profile(username: str) -> Response:
     conn = get_db()
     c = conn.cursor()
 
@@ -182,7 +172,6 @@ def user_profile(username):
         # Get the user's tweets from the database
         c.execute("SELECT * FROM tweets WHERE userHandle=?", (username,))
         tweets = c.fetchall()
-        print(tweets[0])
 
         # Render the template with the user's information and tweets
         return render_template("user.html", user=user, tweets=tweets)
@@ -190,16 +179,14 @@ def user_profile(username):
     # If the user doesn't exist, display an error message
     return "User not found"
 
-@app.route('/tweets/<tweetId>')
-def singleTweet(tweetId):
+@app.route('/tweets/<tweet_id>')
+def singleTweet(tweet_id: str) -> Response:
     conn = get_db()
     c = conn.cursor()
 
     # Get the tweet's information from the database
-    c.execute("SELECT * FROM tweets WHERE id=?", (tweetId,))
+    c.execute("SELECT * FROM tweets WHERE id=?", (tweet_id,))
     tweet = c.fetchone()
-
-    print(tweet["hashtag"])
 
     if tweet:
         if "username" in session:
@@ -228,17 +215,15 @@ def singleTweet(tweetId):
                 ))
                 conn.commit()
                 conn.close()
-
-        print(tweet)
                 
         # Render the template with the tweet's information
         return render_template("tweet.html", tweet=tweet)
 
     # If the user doesn't exist, display an error message
-    return "Tweet not found"
+    return redirect("/")
 
 @app.route('/logout', methods=["GET", "POST"])
-def logout():
+def logout() -> Response:
     if "username" in session:
         session.pop('handle', None)
         session.pop('username', None)
