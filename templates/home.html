@@ -1,80 +1,54 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Tweeter - Home</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
-  </head>
-  <body>
-    <div class="top-row">
-      <div class="logo">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
-      </div>
-      {% if not loggedIn %}
-      <div>
-        <div class="login">
-          <a href="{{ url_for('login') }}">
-            <button>Login</button>
-          </a>
+{% extends "layout.html" %}
+
+{% block title %}Tweetor {% endblock %}
+
+{% block body %}
+<br>
+<br>
+<br>
+{% if loggedIn %}
+  <div class="row">
+    <div class="six columns offset-by-three">
+      <form action="/submit_tweet" method="post" id="post_tweet">
+        <div class="row">
+          <div class="twelve columns">
+            <textarea name="content" id="content" class="tweet-content-input u-full-width" placeholder="What is happening?!" maxlength="280" form="post_tweet"></textarea>
+            <input type="text" name="hashtag" id="hashtag" class="u-full-width" placeholder="Hashtag">
+          </div>
         </div>
-        <div class="signup">
-          <a href="{{ url_for('signup') }}">
-            <button>Signup</button>
-          </a>
+        <div class="row">
+          <div class="twelve columns">
+            <button type="submit" class="button-primary">Tweet</button>
+          </div>
         </div>
-      </div>
-      {% else %}
-        <div class="logout">
-          <a href="{{ url_for('logout') }}">
-            <button>Logout</button>
-          </a>
-        </div>
-      {% endif %}
+      </form>
     </div>
-    <br>
-    <br>
-    <br>
-    {% if loggedIn %}
-      <div class="row">
-        <div class="six columns offset-by-three">
-          <form action="/submit_tweet" method="post">
-            <div class="row">
-              <div class="twelve columns">
-                <label for="content">What's happening?</label>
-                <input type="text" name="content" id="content" class="u-full-width" placeholder="Type your tweet here">
-                <input type="text" name="hashtag" id="hashtag" class="u-full-width" placeholder="Hashtag">
+  </div>
+{% endif %}
+<br>
+<br>
+<br>
+<div class="row">
+  <div class="six columns offset-by-three">
+    <div class="text-center tweets">
+      {% for tweet in tweets %}
+        <div class="row">
+          <div class="twelve columns">
+            <div class="tweet">
+              <div class="tweet-username tweet-timestamp">
+                <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+                <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+                <span>&#160;·&#160;</span>
+                <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
               </div>
-            </div>
-            <div class="row">
-              <div class="twelve columns">
-                <button type="submit" class="button-primary">Tweet</button>
+              <div class="tweet-content">
+                <a href="/tweets/{{ tweet.id }}">{{ tweet.content }} {{ tweet.hashtag }}</a>
               </div>
+              <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
             </div>
-          </form>
         </div>
-      </div>
-    {% endif %}
-    <br>
-    <br>
-    <br>
-    <div class="row">
-      <div class="six columns offset-by-three">
-        <div class="text-center tweets">
-          {% for tweet in tweets %}
-            <div class="row">
-              <div class="twelve columns">
-                <div class="tweet">
-                  <div class="tweet-username"><a href="/user/{{ tweet.user }}">{{ tweet.user }}</a></div>
-                  <div class="tweet-content">{{ tweet.content }}</div>
-                  <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
-                </div>
-              </div>
-            </div>
-            <hr>
-          {% endfor %}
-        </div>
-      </div>
+      {% endfor %}
     </div>
-  </body>
-</html>
+  </div>
+</div>
+{% endblock %}

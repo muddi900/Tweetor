@@ -1,62 +1,36 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>User Profile</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
-  </head>
-  <body>
-    <div class="top-row">
-        <div class="logo">
-          <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
-        </div>
-        {% if not loggedIn %}
-        <div>
-          <div class="login">
-            <a href="{{ url_for('login') }}">
-              <button>Login</button>
-            </a>
-          </div>
-          <div class="signup">
-            <a href="{{ url_for('signup') }}">
-              <button>Signup</button>
-            </a>
-          </div>
-        </div>
-        {% else %}
-          <div class="logout">
-            <a href="{{ url_for('logout') }}">
-              <button>Logout</button>
-            </a>
-          </div>
-        {% endif %}
-      </div>
-      <br>
-      <br>
-      <br>
-    <div class="container">
-      <div class="row">
-        <div class="twelve columns">
-          <h1>{{ user.username }}'s Profile</h1>
-        </div>
-      </div>
+{% extends "layout.html" %}
 
-      <div class="row">
-        <div class="twelve columns">
-          <h2>Tweets</h2>
-          <ul>
-            <hr>
-            {% for tweet in tweets %}
-              <div>
-                <h4>{{ user.username }}</h4>
-                <span>{{ tweet.content }}</span>
-                <hr>
-              </div>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
+{% block title %}{{ user.username }}'s profile {% endblock %}
+
+{% block body %}
+<br>
+<br>
+<br>
+<div class="container">
+  <div class="row">
+    <div class="twelve columns">
+      <h1>{{ user.username }}'s Profile</h1>
     </div>
-  </body>
-</html>
+  </div>
+
+  <div class="row">
+    <div class="twelve columns">
+      <h2>Tweets</h2>
+      <ul>
+        {% for tweet in tweets %}
+          <div class="tweet">
+            <div class="tweet-username">
+            <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+            <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+            </div>
+            <div class="tweet-content">
+            <a href="/tweets/{{ tweet.id }}">{{ tweet.content }} {{ tweet.hashtag }}</a>
+            </div>
+            <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
+          </div>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

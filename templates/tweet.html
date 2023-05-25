@@ -1,48 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<title>{{ tweet.content }} | Tweeter</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
-</head>
-<body>
-	<div class="top-row">
-		<div class="logo">
-		  <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
+{% extends "layout.html" %}
+
+{% block title %}{{ tweet.content }} {% endblock %}
+
+{% block body %}
+<br>
+<br>
+<br>
+<div class="row">
+	<div class="twelve columns">
+		<div class="tweet">
+		  <div class="tweet-username">
+			<a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+			<a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+		  </div>
+		  <div class="tweet-content">
+			<a href="/tweets/{{ tweet.id }}">{{ tweet.content }} {{ tweet.hashtag }}</a>
+		  </div>
+		  <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
 		</div>
-		{% if not loggedIn %}
-		<div>
-		  <div class="login">
-			<a href="{{ url_for('login') }}">
-			  <button>Login</button>
-			</a>
-		  </div>
-		  <div class="signup">
-			<a href="{{ url_for('signup') }}">
-			  <button>Signup</button>
-			</a>
-		  </div>
-		</div>
-		{% else %}
-		  <div class="logout">
-			<a href="{{ url_for('logout') }}">
-			  <button>Logout</button>
-			</a>
-		  </div>
-		{% endif %}
 	</div>
-	<br>
-	<br>
-	<br>
-    <div class="row">
-        <div class="twelve columns">
-            <div class="tweet">
-                <div class="tweet-username">{{ tweet.user }}</div>
-                <div class="tweet-content">{{ tweet.content }}</div>
-                <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+</div>
+{% endblock %}
