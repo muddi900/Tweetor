@@ -74,7 +74,7 @@ def home() -> Response:
     tweets = cursor.fetchall()
     if "username" in session:
         cursor = db.cursor()
-        cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], )) 
+        cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
         if cursor.fetchone()["turbo"]==1:
             print("turbo")
             return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=True)
@@ -85,13 +85,17 @@ def home() -> Response:
 @app.route("/submit_tweet", methods=["POST"])
 def submit_tweet() -> Response:
     content = request.form["content"]
-    if len(content) > 280:
+    if len(content) > 10000:
         return redirect("/")
-    print(session)
     if "username" not in session:
         return redirect("/")
-    hashtag = request.form["hashtag"]
     db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
+    if cursor.fetchone()["turbo"]==0 and len(content)>280:
+        return redirect("/")
+    print(session)
+    hashtag = request.form["hashtag"]
     cursor = db.cursor()
     cursor.execute(
         "INSERT INTO tweets (content, userHandle, username, hashtag) VALUES (?, ?, ?, ?)",
