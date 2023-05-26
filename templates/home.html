@@ -60,19 +60,35 @@
   </div>
 </div>
 
+{% if turbo %}
+<script>
+  function formatTweet(content) {
+    // Replace double asterisks (**) with HTML tags for bold
+    let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '**<strong>$1</strong>**');
+
+    // Replace single asterisks (*) with HTML tags for italic
+    formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '$1*<em>$2</em>*$3');
+    return formattedContent;
+  }
+  console.log("You have Tweetor turbo")
+</script>
+{% else %}
+<script>
+  function formatTweet(content) {
+    return content.replace('*', '');
+  }
+</script>
+{% endif %}
+
 <script>
   // Get the textarea element and the form input element
   const textarea = document.getElementById('field');
   const tweetInput = document.getElementById('tweet-input');
 
   textarea.addEventListener('input', function() {
-    const content = textarea.innerText;
-
-    // Replace double asterisks (**) with HTML tags for bold
-    let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '**<strong>$1</strong>**');
-
-    // Replace single asterisks (*) with HTML tags for italic
-    formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '$1*<em>$2</em>*$3');
+    let content = textarea.innerText;
+    
+    const formattedContent = formatTweet(content);
 
     // Set the formatted content as the innerHTML of the textarea
     textarea.innerHTML = formattedContent;

@@ -94,7 +94,7 @@ def submit_tweet() -> Response:
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
-    if cursor.fetchone()["turbo"]==0 and len(content)>280:
+    if cursor.fetchone()["turbo"]==0 and (len(content)>280 or "*" in content):
         return redirect("/")
     print(session)
     hashtag = request.form["hashtag"]
