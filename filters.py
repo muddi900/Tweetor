@@ -1,5 +1,6 @@
 from datetime import datetime
 from markupsafe import Markup
+import re
 
 def format_tweet(tweet_content):
     # Replace double asterisks (**) with HTML tags for bold
@@ -7,6 +8,9 @@ def format_tweet(tweet_content):
 
     # Replace single asterisks (*) with HTML tags for italic
     formatted_content = formatted_content.replace('*', '<em>', 1).replace('*', '</em>', 1)
+
+    # Replace double underscores (__) with HTML tags for underline
+    formatted_content = formatted_content.replace('__', '<u>', 1).replace('__', '</u>', 1)
 
     return Markup(formatted_content)
 

@@ -68,9 +68,12 @@
 
     // Replace single asterisks (*) with HTML tags for italic
     formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '$1*<em>$2</em>*$3');
+
+    // Replace double underscores (__) with HTML tags for underlines
+    formattedContent = formattedContent.replace(/__(.*?)__/g, '__<u>$1</u>__');
     return formattedContent;
   }
-  console.log("You have Tweetor turbo")
+  console.log("You have Tweetor turbo");
 </script>
 {% else %}
 <script>
