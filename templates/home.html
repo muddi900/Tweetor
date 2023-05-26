@@ -12,7 +12,11 @@
       <form action="/submit_tweet" method="post" id="post_tweet">
         <div class="row">
           <div class="twelve columns">
-            <textarea name="content" id="content" class="tweet-content-input u-full-width" placeholder="What is happening?!" maxlength="280" form="post_tweet"></textarea>
+            {% if turbo %}
+              <textarea name="content" id="content" class="tweet-content-input u-full-width" placeholder="What is happening?!" maxlength="10000" form="post_tweet"></textarea>
+            {% else %}
+              <textarea name="content" id="content" class="tweet-content-input u-full-width" placeholder="What is happening?!" maxlength="280" form="post_tweet"></textarea>
+            {% endif %}
             <input type="text" name="hashtag" id="hashtag" class="u-full-width" placeholder="Hashtag">
           </div>
         </div>

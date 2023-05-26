@@ -35,6 +35,7 @@ sqlite3.connect(DATABASE).cursor().execute(
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
+        turbo INTEGER,
         handle TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL
     )
@@ -71,7 +72,14 @@ def home() -> Response:
     cursor = db.cursor()
     cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
     tweets = cursor.fetchall()
-    return render_template("home.html", tweets=tweets, loggedIn=("username" in session))
+    if "username" in session:
+        cursor = db.cursor()
+        cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], )) 
+        if cursor.fetchone()["turbo"]==1:
+            print("turbo")
+            return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=True)
+        return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=False)
+    return render_template("home.html", tweets=tweets, loggedIn=("username" in session), nitro=False)
 
 
 @app.route("/submit_tweet", methods=["POST"])
@@ -122,8 +130,8 @@ def signup() -> Response:
 
         c = conn.cursor()
         c.execute(
-            "INSERT INTO users (username, password, handle) VALUES (?, ?, ?)",
-            (username, hashed_password, handle),
+            "INSERT INTO users (username, password, handle, turbo) VALUES (?, ?, ?, ?)",
+            (username, hashed_password, handle, 0),
         )
         conn.commit()
         conn.close()
