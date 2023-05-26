@@ -12,11 +12,15 @@
       <form action="/submit_tweet" method="post" id="post_tweet">
         <div class="row">
           <div class="twelve columns">
-            {% if turbo %}
+            <!-- {% if turbo %}
               <textarea name="content" id="content" class="tweet-content-input u-full-width" placeholder="What is happening?!" maxlength="10000" form="post_tweet"></textarea>
             {% else %}
               <textarea name="content" id="content" class="tweet-content-input u-full-width" placeholder="What is happening?!" maxlength="280" form="post_tweet"></textarea>
-            {% endif %}
+            {% endif %} -->
+            <div name="field" id="field" role="textbox" contenteditable="true" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="tweet-content-input u-full-width" placeholder="What is happening?!" form="post_tweet">
+
+            </div>
+            <input type="hidden" name="content" id="tweet-input">
             <input type="text" name="hashtag" id="hashtag" class="u-full-width" placeholder="Hashtag">
           </div>
         </div>
@@ -55,4 +59,40 @@
     </div>
   </div>
 </div>
+
+<script>
+  // Get the textarea element and the form input element
+  const textarea = document.getElementById('field');
+  const tweetInput = document.getElementById('tweet-input');
+
+  textarea.addEventListener('input', function() {
+    const content = textarea.innerText;
+
+    // Replace double asterisks (**) with HTML tags for bold
+    let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '**<strong>$1</strong>**');
+
+    // Replace single asterisks (*) with HTML tags for italic
+    formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '$1*<em>$2</em>*$3');
+
+    // Set the formatted content as the innerHTML of the textarea
+    textarea.innerHTML = formattedContent;
+
+    // Update the form input value with the formatted content
+    tweetInput.value = content;
+
+    // Move the cursor to the end of the textarea
+    moveCursorToEnd(textarea);
+  });
+
+  // Function to move the cursor to the end of the textarea
+  function moveCursorToEnd(element) {
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.selectNodeContents(element);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    element.focus();
+  }
+</script>
 {% endblock %}

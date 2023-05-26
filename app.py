@@ -84,6 +84,7 @@ def home() -> Response:
 
 @app.route("/submit_tweet", methods=["POST"])
 def submit_tweet() -> Response:
+    print(request.form)
     content = request.form["content"]
     if len(content) > 10000:
         return redirect("/")
