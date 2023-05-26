@@ -10,6 +10,7 @@ app.secret_key = "super secret key"
 
 # Register the custom filters
 app.jinja_env.filters['format_timestamp'] = filters.format_timestamp
+app.jinja_env.filters['format_tweet'] = filters.format_tweet
 
 # Set up the session object
 app.config["SESSION_PERMANENT"] = False

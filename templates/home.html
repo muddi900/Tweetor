@@ -50,7 +50,7 @@
                 <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
               </div>
               <div class="tweet-content">
-                <a href="/tweets/{{ tweet.id }}">{{ tweet.content }} {{ tweet.hashtag }}</a>
+                <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
               </div>
               <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
             </div>
