@@ -1,10 +1,11 @@
 from datetime import datetime
 from markupsafe import Markup
-import re
 
 def format_tweet(tweet_content):
+    formatted_content = tweet_content.replace('***', '<strong><em>', 1).replace('***', '</em></strong>', 1)
+
     # Replace double asterisks (**) with HTML tags for bold
-    formatted_content = tweet_content.replace('**', '<strong>', 1).replace('**', '</strong>', 1)
+    formatted_content = formatted_content.replace('**', '<strong>', 1).replace('**', '</strong>', 1)
 
     # Replace single asterisks (*) with HTML tags for italic
     formatted_content = formatted_content.replace('*', '<em>', 1).replace('*', '</em>', 1)
@@ -17,7 +18,7 @@ def format_tweet(tweet_content):
 def format_timestamp(value):
     # Convert the timestamp to a datetime object
     timestamp = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-    
+
     # Format the datetime object
     if timestamp.year != datetime.now().year:
         formatted_timestamp = timestamp.strftime("%B %d, %Y")

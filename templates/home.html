@@ -12,16 +12,11 @@
       <form action="/submit_tweet" method="post" id="post_tweet">
         <div class="row">
           <div class="twelve columns">
-            <!-- {% if turbo %}
-              <textarea name="content" id="content" class="tweet-content-input u-full-width" placeholder="What is happening?!" maxlength="10000" form="post_tweet"></textarea>
-            {% else %}
-              <textarea name="content" id="content" class="tweet-content-input u-full-width" placeholder="What is happening?!" maxlength="280" form="post_tweet"></textarea>
-            {% endif %} -->
-            <div name="field" id="field" role="textbox" contenteditable="true" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="tweet-content-input u-full-width" placeholder="What is happening?!" form="post_tweet">
+            <div name="field" autocomplete="off" id="field" role="textbox" contenteditable="true" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="tweet-content-input u-full-width" placeholder="What is happening?!" form="post_tweet">
 
             </div>
             <input type="hidden" name="content" id="tweet-input">
-            <input type="text" name="hashtag" id="hashtag" class="u-full-width" placeholder="Hashtag">
+            <input type="text" name="hashtag" autocomplete="off" id="hashtag" class="u-full-width" placeholder="Hashtag">
           </div>
         </div>
         <div class="row">
@@ -71,33 +66,38 @@
 
     // Replace double underscores (__) with HTML tags for underlines
     formattedContent = formattedContent.replace(/__(.*?)__/g, '__<u>$1</u>__');
-    return formattedContent;
+    return formattedContent.trimEllip(10000);
   }
-  console.log("You have Tweetor turbo");
+  console.log("You have Tweetor turbo")
 </script>
 {% else %}
 <script>
   function formatTweet(content) {
-    return content.replace('*', '');
+    return content.replace('*', '').replace('_', '').trimEllip(280);
   }
 </script>
 {% endif %}
 
 <script>
+    String.prototype.trimEllip = function (length) {
+      return this.length > length ? this.substring(0, length) : this;
+    }
   // Get the textarea element and the form input element
   const textarea = document.getElementById('field');
   const tweetInput = document.getElementById('tweet-input');
 
   textarea.addEventListener('input', function() {
     let content = textarea.innerText;
-    
+
     const formattedContent = formatTweet(content);
 
     // Set the formatted content as the innerHTML of the textarea
     textarea.innerHTML = formattedContent;
 
     // Update the form input value with the formatted content
-    tweetInput.value = content;
+    tweetInput.value = content.trimEllip(280);
+    console.log(tweetInput.value)
+    console.log(textarea.innerHTML)
 
     // Move the cursor to the end of the textarea
     moveCursorToEnd(textarea);

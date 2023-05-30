@@ -46,7 +46,7 @@ sqlite3.connect(DATABASE).cursor().execute(
     """
     CREATE TABLE IF NOT EXISTS interests (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT NOT NULL UNIQUE,
+        user TEXT NOT NULL,
         hashtag TEXT NOT NULL,
         importance INT NOT NULL
     )
@@ -216,7 +216,7 @@ def singleTweet(tweet_id: str) -> Response:
                     tweet["hashtag"],
                     1,
                 ))
-                
+
                 conn.commit()
                 conn.close()
             else:
@@ -229,7 +229,7 @@ def singleTweet(tweet_id: str) -> Response:
                 ))
                 conn.commit()
                 conn.close()
-                
+
         # Render the template with the tweet's information
         return render_template("tweet.html", tweet=tweet)
 
