@@ -16,6 +16,13 @@
   grid-area: 4 / 2 / 29 / 4;
 }
 
+.search {
+  width: 100%;
+  font-size: 18px;
+  padding: 11px;
+  border: 1px solid #ddd;
+}
+
 .txt-centered {
     text-align: center;
 }

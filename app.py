@@ -188,7 +188,7 @@ def user_profile(username: str) -> Response:
         tweets = c.fetchall()
 
         # Render the template with the user's information and tweets
-        return render_template("user.html", user=user, tweets=tweets)
+        return render_template("user.html", user=user, tweets=tweets, loggedIn=("username" in session))
 
     # If the user doesn't exist, display an error message
     return "User not found"
@@ -231,7 +231,7 @@ def singleTweet(tweet_id: str) -> Response:
                 conn.close()
 
         # Render the template with the tweet's information
-        return render_template("tweet.html", tweet=tweet)
+        return render_template("tweet.html", tweet=tweet, loggedIn=("username" in session))
 
     # If the user doesn't exist, display an error message
     return redirect("/")
@@ -248,6 +248,19 @@ def searchAPI() -> Response:
         tweets = [dict(tweet) for tweet in c.fetchall()]
         return jsonify(tweets)
     return "Error Could Not Find Query"
+
+@app.route('/search', methods=["GET"])
+def search() -> Response:
+    if request.args.get("query"):
+        conn = get_db()
+        c = conn.cursor()
+        print(request.args.get("query"))
+
+        # Find query
+        c.execute("SELECT * FROM tweets WHERE content LIKE ? OR hashtag LIKE ?", (f"%{request.args.get('query')}%", f"%{request.args.get('query')}%", ))
+        tweets = [dict(tweet) for tweet in c.fetchall()]
+        return render_template("search.html", tweets=tweets, loggedIn=("username" in session))
+    return "No Query Was Found"
 
 @app.route('/logout', methods=["GET", "POST"])
 def logout() -> Response:

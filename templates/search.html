@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}Search {% endblock %}
+
+{% block body %}
+<br>
+<br>
+<br>
+
+{% for tweet in tweets %}
+  <div class="tweet">
+    <div class="tweet-username tweet-timestamp">
+      <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+      <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+      <span>&#160;·&#160;</span>
+      <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
+    </div>
+    <div class="tweet-content">
+      <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
+    </div>
+  </div>
+{% endfor %}
+
+{% endblock %}
