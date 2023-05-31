@@ -2,7 +2,7 @@ import sqlite3
 import hashlib
 import random
 import filters
-from flask import Flask, Response, render_template, request, redirect, url_for, session, g
+from flask import Flask, Response, render_template, request, redirect, url_for, session, g, jsonify
 from flask_session import Session
 
 app = Flask(__name__)
@@ -235,6 +235,19 @@ def singleTweet(tweet_id: str) -> Response:
 
     # If the user doesn't exist, display an error message
     return redirect("/")
+
+@app.route('/api/search', methods=["GET"])
+def searchAPI() -> Response:
+    if request.args.get("query"):
+        conn = get_db()
+        c = conn.cursor()
+        print(request.args.get("query"))
+
+        # Find query
+        c.execute("SELECT * FROM tweets WHERE content LIKE ?", (f"%{request.args.get('query')}%", ))
+        tweets = [dict(tweet) for tweet in c.fetchall()]
+        return jsonify(tweets)
+    return "Error Could Not Find Query"
 
 @app.route('/logout', methods=["GET", "POST"])
 def logout() -> Response:
