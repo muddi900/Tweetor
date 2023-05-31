@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>{% block title %}{% endblock %} | Tweeter</title>
+	<title>{% block title %}{% endblock %} | Tweetor</title>
+	<script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 	<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
 	<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
@@ -11,35 +13,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-	<div class="top-row">
+	<div class="w3-sidebar w3-black w3-bar-block" style="width:10%;border-right: 1px solid #555;">
 		<div class="logo">
             <a href="/">
 		        <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
             </a>
 		</div>
-		{% if not loggedIn %}
-		<div>
-		  <div class="login">
-			<a href="{{ url_for('login') }}">
-			  <button>Login</button>
-			</a>
-		  </div>
-		  <div class="signup">
-			<a href="{{ url_for('signup') }}">
-			  <button>Signup</button>
-			</a>
-		  </div>
+		<div class="pages">
+			{% if not loggedIn %}
+				<div>
+					<a href="{{ url_for('login') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Login</a>
+					<a href="{{ url_for('signup') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Signup</a>
+				</div>
+			{% else %}
+				<a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span> Home</a>
+			    <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span> Logout</a>
+			{% endif %}
 		</div>
-		{% else %}
-		  <div class="logout">
-			<a href="{{ url_for('logout') }}">
-			  <button>Logout</button>
-			</a>
-		  </div>
-		{% endif %}
 	</div>
+	<div style="margin-left:10%;">
     {% block body %}
 
     {% endblock %}
+	</div>
 </body>
 </html>

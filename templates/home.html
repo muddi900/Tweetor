@@ -31,29 +31,19 @@
 <br>
 <br>
 <br>
-<div class="row">
-  <div class="six columns offset-by-three">
-    <div class="text-center tweets">
-      {% for tweet in tweets %}
-        <div class="row">
-          <div class="twelve columns">
-            <div class="tweet">
-              <div class="tweet-username tweet-timestamp">
-                <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
-                <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
-                <span>&#160;·&#160;</span>
-                <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
-              </div>
-              <div class="tweet-content">
-                <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
-              </div>
-              <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
-            </div>
-        </div>
-      {% endfor %}
+{% for tweet in tweets %}
+  <div class="tweet">
+    <div class="tweet-username tweet-timestamp">
+      <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+      <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+      <span>&#160;·&#160;</span>
+      <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
+    </div>
+    <div class="tweet-content">
+      <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
     </div>
   </div>
-</div>
+{% endfor %}
 
 {% if turbo %}
 <script>

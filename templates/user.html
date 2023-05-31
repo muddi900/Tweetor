@@ -13,24 +13,20 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="twelve columns">
-      <h2>Tweets</h2>
-      <ul>
-        {% for tweet in tweets %}
-          <div class="tweet">
-            <div class="tweet-username">
-            <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
-            <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
-            </div>
-            <div class="tweet-content">
-            <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
-            </div>
-            <div class="tweet-timestamp">{{ tweet.timestamp }}</div>
-          </div>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
+  <h2>Tweets</h2>
+  <ul>
+    {% for tweet in tweets %}
+      <div class="tweet">
+        <div class="tweet-username">
+        <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+        <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+        </div>
+        <div class="tweet-content">
+        <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
+        </div>
+        
+      </div>
+    {% endfor %}
+  </ul>
 </div>
 {% endblock %}

@@ -5,6 +5,17 @@
     height: 100vh;
 }
 
+/* @media (min-width: 480.05px) and (max-width: 768px) */
+
+.left-menu {
+  display: grid;
+  position: relative;
+  grid-area: 3 / 2 / 27 / 4;
+  /* grid-template-columns: 0 0 1.54052141rem 0 0 4.08173335rem 0 0 0.62681597rem 1.98253757rem 3.0023636rem 5.30245115rem; */
+  /* grid-template-rows: 0 0 minmax(8.2316083rem, max-content) minmax(2.26538213rem, max-content) minmax(1.20122376rem, max-content) minmax(2.88050959rem, max-content) minmax(1.34945669rem, max-content) minmax(4.08173335rem, max-content) minmax(1.31771596rem, max-content) minmax(2.91225031rem, max-content) minmax(1.33141022rem, max-content) minmax(30.65125727rem, max-content); */
+  grid-area: 4 / 2 / 29 / 4;
+}
+
 .txt-centered {
     text-align: center;
 }
@@ -26,34 +37,20 @@
   appearance:none;
 }
 
-.top-row {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
-	height: 50px;
-	padding: 10px;
-	background-color: #1da1f2;
-  margin: 0 auto;
-}
-
 .logo img {
 	height: 60px;
 }
 
-.logout form, .login form, .signup form {
+/* .logout form, .login form, .signup form {
   display: flex;
   align-items: center;
-}
+} */
 
 .logout button,  .login button, .signup button {
 	background-color: transparent;
 	border: none;
 	color: white;
 	font-size: 16px;
-	cursor: pointer;
-  margin: 0 auto;
-  display: block;
 }
 
 .centered-form {
@@ -114,10 +111,9 @@ body {
 .tweet {
   padding: 20px;
   margin-bottom: -1px;
-  background-color: #333;
+  background-color: #000;
   border-style: solid;
-  border-radius: 5px;
-  border-color: #fff;
+  border-color: #555;
   border-width: 1px;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
 }
