@@ -5,6 +5,46 @@
     height: 100vh;
 }
 
+.search-form {
+  background-color: #4654e1;
+  width: 300px;
+  height: 44px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.search-form input {
+  background-color: #4654e1;
+  width: 300px;
+  height: 44px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.search-form button {
+  all: unset;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+}
+
+.search-form button svg {
+  color: #fff;
+  fill: currentColor;
+  width: 24px;
+  height: 24px;
+  padding: 10px;
+}
+
+::placeholder {
+  color: #fff;
+  opacity: 0.7; 
+}
+
 /* @media (min-width: 480.05px) and (max-width: 768px) */
 
 .left-menu {

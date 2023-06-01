@@ -260,7 +260,7 @@ def search() -> Response:
         c.execute("SELECT * FROM tweets WHERE content LIKE ? OR hashtag LIKE ?", (f"%{request.args.get('query')}%", f"%{request.args.get('query')}%", ))
         tweets = [dict(tweet) for tweet in c.fetchall()]
         return render_template("search.html", tweets=tweets, loggedIn=("username" in session))
-    return "No Query Was Found"
+    return render_template("search.html", tweets=False, loggedIn=("username" in session))
 
 @app.route('/logout', methods=["GET", "POST"])
 def logout() -> Response:
