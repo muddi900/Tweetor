@@ -26,11 +26,9 @@
 					<a href="{{ url_for('signup') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Signup</a>
 				</div>
 			{% else %}
-				<a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span> Home</a>
-				<form action="{{ url_for('search') }}" method="get">
-					<input type="text" name="query" class="search" placeholder="Search.." title="Type in a category">
-				</form>
-			    <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span> Logout</a>
+				<a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span></a>
+				<a href="{{ url_for('search') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="material-symbols:search"></span></a>
+			    <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span></a>
 			{% endif %}
 		</div>
 	</div>
