@@ -108,6 +108,20 @@ def submit_tweet() -> Response:
             hashtag,
         ),
     )
+    def tweet() -> Response:
+        if "username" not in session:
+            return redirect("/signup")
+
+    tweet_content = request.form["content"]
+
+    if is_profanity(tweet_content):
+        return Response("Profanity is not allowed.", status=400)
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO tweets (username, content) VALUES (?, ?)", (session["username"], tweet_content))
+    db.commit()
+    return redirect("/")
     db.commit()
     return redirect(url_for("home"))
 
@@ -175,9 +189,16 @@ def login() -> Response:
 
 @app.route('/user/<username>')
 def user_profile(username: str) -> Response:
-    conn = get_db()
-    c = conn.cursor()
-
+ conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    if user:
+        cursor.execute("SELECT followers FROM users WHERE username = ?", (username,))
+        follower_count = cursor.fetchone()[0]
+    else:
+        return redirect("/signup")
+    return render_template("user.html", user=user, followerCount=follower_count, loggedIn=("username" in session))
     # Get the user's information from the database
     c.execute("SELECT * FROM users WHERE handle=?", (username,))
     user = c.fetchone()
@@ -268,6 +289,78 @@ def logout() -> Response:
         session.pop('handle', None)
         session.pop('username', None)
     return redirect("/")
+# Profanity filter
+profanity_words = ["fuck", "badword", "curse"]
+
+def is_profanity(text: str) -> bool:
+    for word in profanity_words:
+        if word in text.lower():
+            return True
+    return False
+
+# Helper function to count followers
+def get_follower_count(username: str) -> int:
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT followers FROM users WHERE username = ?", (username,))
+    follower_count = cursor.fetchone()
+    if follower_count:
+        return follower_count[0]
+    return 0
+
+# Helper function to count likes for a tweet
+def get_like_count(tweet_id: int) -> int:
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT likes FROM tweets WHERE id = ?", (tweet_id,))
+    like_count = cursor.fetchone()
+    if like_count:
+        return like_count[0]
+    return 0
+
+@app.route("/follow/<username>")
+def follow(username: str) -> Response:
+    if "username" not in session:
+        return redirect("/signup")
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT followers FROM users WHERE username = ?", (username,))
+    follower_count = cursor.fetchone()
+    if follower_count:
+        follower_count = follower_count[0]
+    else:
+        follower_count = 0
+    db.commit()
+    if follower_count >= session["followers"]:
+        return redirect("/")
+    cursor.execute("UPDATE users SET followers = followers + 1 WHERE username = ?", (username,))
+    db.commit()
+    return redirect(url_for("user", username=username))
+
+@app.route("/like/<int:tweet_id>")
+def like(tweet_id: int) -> Response:
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM tweets WHERE id = ?", (tweet_id,))
+    tweet = cursor.fetchone()
+    if tweet:
+        cursor.execute("UPDATE tweets SET likes = likes + 1 WHERE id = ?", (tweet_id,))
+        db.commit()
+        return redirect(url_for("home"))
+    return redirect("/")
+
+@app.route("/user/<username>")
+def user_profile(username: str) -> Response:
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    if user:
+        cursor.execute("SELECT followers FROM users WHERE username = ?", (username,))
+        follower_count = cursor.fetchone()[0]
+    else:
+        return redirect("/signup")
+    return render_template("user.html", user=user, followerCount=follower_count, loggedIn=("username" in session))
 
 if __name__ == "__main__":
     app.run(debug=False)
