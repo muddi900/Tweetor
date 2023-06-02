@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}{{ tweet.content|format_tweet }} {% endblock %}
+{% block title %}{{ tweet.content }} {% endblock %}
 
 {% block body %}
 <br>
@@ -17,13 +17,4 @@
 	<a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
   </div>
 </div>
-{% for tweet in tweets %}
-    <div>
-        {{ tweet.content }}
-        <a href="{{ url_for('like', tweet_id=tweet. the_id) }}">Like</a>
-        <a href="{{ url_for('follow', username=tweet.
-        } else:
-            {{ tweet.content }}
-    </div>
-{% endfor %}
 {% endblock %}
