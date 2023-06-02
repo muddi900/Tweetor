@@ -72,7 +72,7 @@ def home() -> Response:
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
-    tweets = cursor.fetchall()
+    tweets = cursor.fetchall()  
     if "username" in session:
         cursor = db.cursor()
         cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
@@ -304,6 +304,84 @@ def user_profile(username: str) -> Response:
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM tweets WHERE userHandle = ?", (username, ))
     return render_template("user.html", user=user, loggedIn=("username" in session), tweets=cursor.fetchall())
+#erel stuff
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userHandle TEXT NOT NULL,
+        tweetId INTEGER NOT NULL
+    )
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS follows (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        followerHandle TEXT NOT NULL,
+        followingHandle TEXT NOT NULL
+    )
+""")
+@app.route("/like_tweet", methods=["POST"])
+def like_tweet():
+    tweet_id = request.form["tweetId"]
+    user_handle = session["handle"]
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # Check if the like already exists
+    cursor.execute("SELECT * FROM likes WHERE userHandle = ? AND tweetId = ?", (user_handle, tweet_id))
+    existing_like = cursor.fetchone()
+
+    if existing_like:
+        # Unlike the tweet
+        cursor.execute("DELETE FROM likes WHERE id = ?", (existing_like["id"],))
+    else:
+        # Like the tweet
+        cursor.execute("INSERT INTO likes (userHandle, tweetId) VALUES (?, ?)", (user_handle, tweet_id))
+
+    db.commit()
+
+    return jsonify({"status": "success"})
+
+@app.route("/follow_user", methods=["POST"])
+def follow_user():
+    following_handle = request.form["followingHandle"]
+    follower_handle = session["handle"]
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # Check if the user is already following
+    cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (follower_handle, following_handle))
+    existing_follow = cursor.fetchone()
+
+    if existing_follow:
+        # Unfollow the user
+        cursor.execute("DELETE FROM follows WHERE id = ?", (existing_follow["id"],))
+    else:
+        # Follow the user
+        cursor.execute("INSERT INTO follows (followerHandle, followingHandle) VALUES (?, ?)", (follower_handle, following_handle))
+
+    db.commit()
+
+    # Redirect back to the user's profile page
+    return redirect(url_for('user_profile', user_handle=following_handle))
+
+
+def get_like_count(tweet_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM likes WHERE tweetId = ?", (tweet_id,))
+    return cursor.fetchone()["count"]
+
+def get_follower_count(user_handle):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT COUNT(*) as count FROM follows WHERE followingHandle = ?", (user_handle,))
+    return cursor.fetchone()["count"]
+
 
 if __name__ == "__main__":
     app.run(debug=False)
