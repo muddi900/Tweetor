@@ -58,23 +58,24 @@ python main.py
 
 ## To-Do List
 
-- Direct Messages (DMs) functionality
-- Search functionality to find users and tweets
-- Implement an algorithm for personalized tweet recommendations (similar to Twitter's algorithm)
-- Add user profile picture upload functionality
-- Enhance the design and styling of the application
-- Implement retweets and likes functionality
-- Integrate real-time updates using WebSocket (e.g., new tweets, notifications)
-- Implement pagination for tweets on the home page and user profiles
-- Implement trending topics and hashtags
-- Add user settings and account management features
-- Implement user authentication using OAuth (e.g., Google, Facebook, Twitter)
-- Add support for multimedia content (images, videos) in tweets
-- Implement user mentions and notifications
-- Implement hashtag autocompletion and suggestions
-- Improve security (e.g., password hashing, CSRF protection)
-- Implement email notifications for important events (e.g., new followers, mentions)
-- Perform code optimization and refactoring for better performance and maintainability
+[x] Search functionality to find users and tweets
+[x] Direct Messages (DMs) functionality
+[ ] Following functionality
+[ ] Implement an algorithm for personalized tweet recommendations (similar to Twitter's algorithm)
+[ ] Add user profile picture upload functionality
+[ ] Enhance the design and styling of the application
+[ ] Implement retweets and likes functionality
+[ ] Integrate real-time updates using WebSocket (e.g., new tweets, notifications)
+[ ] Implement pagination for tweets on the home page and user profiles
+[ ] Implement trending topics and hashtags
+[ ] Add user settings and account management features
+[ ] Implement user authentication using OAuth (e.g., Google, Facebook, Twitter)
+[ ] Add support for multimedia content (images, videos) in tweets
+[ ] Implement user mentions and notifications
+[ ] Implement hashtag autocompletion and suggestions
+[ ] Improve security (e.g., password hashing, CSRF protection)
+[ ] Implement email notifications for important events (e.g., new followers, mentions)
+[ ] Perform code optimization and refactoring for better performance and maintainability
 
 ## Contributing
 
