@@ -357,11 +357,18 @@ def like_tweet():
 
 @app.route("/follow_user", methods=["POST"])
 def follow_user():
+    if "followingUsername" not in request.form or "username" not in session:
+        return render_template("error.html", error="You are not logged in.")
     following_username = request.form["followingUsername"]
     follower_username = session["username"]
 
     db = get_db()
     cursor = db.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE handle=?", (following_username, ))
+
+    if cursor.fetchone() is None:
+        return render_template("error.html", error="That user doesn't exist.")
 
     # Check if the user is already following
     cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (follower_username, following_username))
@@ -376,11 +383,7 @@ def follow_user():
 
     db.commit()
 
-    return redirect(url_for('home'))
-
-
-
-
+    return redirect(f'/user/{following_username}')
 
 def get_like_count(tweet_id):
     db = get_db()
