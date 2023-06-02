@@ -11,11 +11,20 @@
     <div class="twelve columns">
       <h1>{{ user.username }}'s Profile</h1>
 
-      <!-- Follow button -->
-      <form action="{{ url_for('follow_user') }}" method="post">
-        <input type="hidden" name="followingHandle" value="{{ user.handle }}">
-        <button type="submit">Follow</button>
-      </form>
+      {% if session['username'] != user.username %}
+        <!-- Follow button -->
+        <form action="{{ url_for('follow_user') }}" method="post">
+          <input type="hidden" name="followingUsername" value="{{ user.username }}">
+          <button type="submit">
+            {% if is_following %}
+              Unfollow
+            {% else %}
+              Follow
+            {% endif %}
+          </button>
+        </form>
+      {% endif %}
+    </div>
   </div>
 
   <h2>Tweets</h2>

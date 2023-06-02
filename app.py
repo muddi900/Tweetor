@@ -301,9 +301,19 @@ def user_profile(username: str) -> Response:
     user = cursor.fetchone()
     if not user:
         return redirect("/home")
-    cursor = conn.cursor()
+
     cursor.execute("SELECT * FROM tweets WHERE userHandle = ?", (username, ))
-    return render_template("user.html", user=user, loggedIn=("username" in session), tweets=cursor.fetchall())
+    tweets = cursor.fetchall()
+
+    is_following = False
+    if "username" in session:
+        logged_in_username = session["username"]
+        cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (logged_in_username, user["handle"]))
+        is_following = cursor.fetchone() is not None
+
+    return render_template("user.html", user=user, loggedIn=("username" in session), tweets=tweets, is_following=is_following)
+
+
 #erel stuff
 sqlite3.connect(DATABASE).cursor().execute(
     """
@@ -347,14 +357,14 @@ def like_tweet():
 
 @app.route("/follow_user", methods=["POST"])
 def follow_user():
-    following_handle = request.form["followingHandle"]
-    follower_handle = session["handle"]
+    following_username = request.form["followingUsername"]
+    follower_username = session["username"]
 
     db = get_db()
     cursor = db.cursor()
 
     # Check if the user is already following
-    cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (follower_handle, following_handle))
+    cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (follower_username, following_username))
     existing_follow = cursor.fetchone()
 
     if existing_follow:
@@ -362,12 +372,14 @@ def follow_user():
         cursor.execute("DELETE FROM follows WHERE id = ?", (existing_follow["id"],))
     else:
         # Follow the user
-        cursor.execute("INSERT INTO follows (followerHandle, followingHandle) VALUES (?, ?)", (follower_handle, following_handle))
+        cursor.execute("INSERT INTO follows (followerHandle, followingHandle) VALUES (?, ?)", (follower_username, following_username))
 
     db.commit()
 
-    # Redirect back to the user's profile page
-    return redirect(url_for('user_profile', user_handle=following_handle))
+    return redirect(url_for('home'))
+
+
+
 
 
 def get_like_count(tweet_id):
