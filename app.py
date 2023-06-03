@@ -52,6 +52,35 @@ sqlite3.connect(DATABASE).cursor().execute(
     )
 """)
 
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT NOT NULL,
+        origin TEXT NOT NULL,
+        content TEXT NOT NULL,
+        viewed INTEGER DEFAULT 0
+    )
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userHandle TEXT NOT NULL,
+        tweetId INTEGER NOT NULL
+    )
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS follows (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        followerHandle TEXT NOT NULL,
+        followingHandle TEXT NOT NULL
+    )
+""")
+
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
@@ -178,33 +207,20 @@ def login() -> Response:
         return redirect("/")
     return render_template("login.html")
 
+@app.route('/notifications')
+def notifications() -> Response:
+    # Check if user is logged in
+    if "username" not in session:
+        return render_template("error.html", error="You were not logged in.")
+    conn = get_db()
+    c = conn.cursor()
 
-# @app.route('/user/<username>')
-# def user_profile(username: str) -> Response:
-#     conn = get_db()
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
-#     user = cursor.fetchone()
-#     if user:
-#         cursor.execute("SELECT followers FROM users WHERE username = ?", (username,))
-#         follower_count = cursor.fetchone()[0]
-#     else:
-#         return redirect("/signup")
-#     return render_template("user.html", user=user, followerCount=follower_count, loggedIn=("username" in session))
-#     # Get the user's information from the database
-#     c.execute("SELECT * FROM users WHERE handle=?", (username,))
-#     user = c.fetchone()
+    # Get the notifications
+    c.execute("SELECT * FROM notifications WHERE user=?", (session["userHandle"], ))
+    notices = c.fetchall()
 
-#     if user:
-#         # Get the user's tweets from the database
-#         c.execute("SELECT * FROM tweets WHERE userHandle=?", (username,))
-#         tweets = c.fetchall()
+    return render_template("notifications.html", notices=notices)
 
-#         # Render the template with the user's information and tweets
-#         return render_template("user.html", user=user, tweets=tweets, loggedIn=("username" in session))
-
-#     # If the user doesn't exist, display an error message
-#     return "User not found"
 
 @app.route('/tweets/<tweet_id>')
 def singleTweet(tweet_id: str) -> Response:
@@ -314,24 +330,6 @@ def user_profile(username: str) -> Response:
     return render_template("user.html", user=user, loggedIn=("username" in session), tweets=tweets, is_following=is_following)
 
 
-#erel stuff
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS likes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userHandle TEXT NOT NULL,
-        tweetId INTEGER NOT NULL
-    )
-""")
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS follows (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        followerHandle TEXT NOT NULL,
-        followingHandle TEXT NOT NULL
-    )
-""")
 @app.route("/like_tweet", methods=["POST"])
 def like_tweet():
     tweet_id = request.form["tweetId"]
