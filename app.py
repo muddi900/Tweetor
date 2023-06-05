@@ -355,33 +355,37 @@ def like_tweet():
 
 @app.route("/follow_user", methods=["POST"])
 def follow_user():
-    if "followingUsername" not in request.form or "username" not in session:
-        return render_template("error.html", error="You are not logged in.")
-    following_username = request.form["followingUsername"]
-    follower_username = session["username"]
+    try:
+        if "followingUsername" not in request.form or "username" not in session:
+            return render_template("error.html", error="You are not logged in.")
+        following_username = request.form["followingUsername"]
+        follower_username = session["username"]
 
-    db = get_db()
-    cursor = db.cursor()
+        db = get_db()
+        cursor = db.cursor()
 
-    cursor.execute("SELECT * FROM users WHERE handle=?", (following_username, ))
+        cursor.execute("SELECT * FROM users WHERE handle=?", (following_username, ))
 
-    if cursor.fetchone() is None:
-        return render_template("error.html", error="That user doesn't exist.")
+        if cursor.fetchone() is None:
+            return render_template("error.html", error="That user doesn't exist.")
 
-    # Check if the user is already following
-    cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (follower_username, following_username))
-    existing_follow = cursor.fetchone()
+        # Check if the user is already following
+        cursor.execute("SELECT * FROM follows WHERE followerHandle = ? AND followingHandle = ?", (follower_username, following_username))
+        existing_follow = cursor.fetchone()
 
-    if existing_follow:
-        # Unfollow the user
-        cursor.execute("DELETE FROM follows WHERE id = ?", (existing_follow["id"],))
-    else:
-        # Follow the user
-        cursor.execute("INSERT INTO follows (followerHandle, followingHandle) VALUES (?, ?)", (follower_username, following_username))
+        if existing_follow:
+            # Unfollow the user
+            cursor.execute("DELETE FROM follows WHERE id = ?", (existing_follow["id"],))
+        else:
+            # Follow the user
+            cursor.execute("INSERT INTO follows (followerHandle, followingHandle) VALUES (?, ?)", (follower_username, following_username))
 
-    db.commit()
+        db.commit()
 
-    return redirect(f'/user/{following_username}')
+        return redirect(f'/user/{following_username}')
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 def get_like_count(tweet_id):
     db = get_db()
