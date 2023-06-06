@@ -24,7 +24,7 @@ sqlite3.connect(DATABASE).cursor().execute(
     """
     CREATE TABLE IF NOT EXISTS tweets  (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT,z
+        content TEXT,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         userHandle TEXT NOT NULL,
         username TEXT NOT NULL,
