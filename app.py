@@ -284,7 +284,10 @@ def searchAPI() -> Response:
         c.execute("SELECT * FROM tweets WHERE content LIKE ?", (f"%{request.args.get('query')}%", ))
         tweets = [dict(tweet) for tweet in c.fetchall()]
         return jsonify(tweets)
-    return "Error Could Not Find Query"
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
+    return jsonify([dict(tweet) for tweet in cursor.fetchall()])
 
 @app.route('/search', methods=["GET"])
 def search() -> Response:
