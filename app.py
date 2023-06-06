@@ -1,6 +1,7 @@
 import sqlite3
 import hashlib
 import random
+import string
 import filters
 from flask import Flask, Response, render_template, request, redirect, url_for, session, g, jsonify
 from flask_session import Session
@@ -23,13 +24,14 @@ sqlite3.connect(DATABASE).cursor().execute(
     """
     CREATE TABLE IF NOT EXISTS tweets  (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT,
+        content TEXT,z
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         userHandle TEXT NOT NULL,
         username TEXT NOT NULL,
         hashtag TEXT NOT NULL
     )
 """)
+
 
 sqlite3.connect(DATABASE).cursor().execute(
     """
@@ -146,19 +148,24 @@ def submit_tweet() -> Response:
     db.commit()
     return redirect(url_for("home"))
 
-# Signup route
+#signup route
 @app.route("/signup", methods=["GET", "POST"])
 def signup() -> Response:
+    error = None
+    correct_captcha = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=5))
     if request.method == "POST":
         username = request.form["username"]
         handle = username
         password = request.form["password"]
         passwordConformation = request.form["passwordConformation"]
+        user_captcha_input = request.form["input"]
+        correct_captcha = request.form["correct_captcha"]
+
+        if user_captcha_input != correct_captcha:
+            return redirect("/signup")
 
         if password != passwordConformation:
             return redirect("/signup")
-
-        conn = get_db()
 
         db = get_db()
         cursor = db.cursor()
@@ -169,20 +176,21 @@ def signup() -> Response:
 
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
 
-        c = conn.cursor()
-        c.execute(
+        cursor.execute(
             "INSERT INTO users (username, password, handle, turbo) VALUES (?, ?, ?, ?)",
             (username, hashed_password, handle, 0),
         )
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
 
         session["handle"] = handle
         session["username"] = username
         return redirect("/")
+
     if "username" in session:
         return redirect("/")
-    return render_template("signup.html")
+    return render_template("signup.html", error=error, correct_captcha=correct_captcha)
+
 
 # Login route
 @app.route("/login", methods=["GET", "POST"])
