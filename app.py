@@ -4,10 +4,13 @@ import random
 import string
 import filters
 from flask import Flask, Response, render_template, request, redirect, url_for, session, g, jsonify
+from flask_cors import CORS, cross_origin
 from flask_session import Session
 
 app = Flask(__name__)
 app.secret_key = "super secret key"
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Register the custom filters
 app.jinja_env.filters['format_timestamp'] = filters.format_timestamp
