@@ -413,6 +413,18 @@ def get_follower_count(user_handle):
     cursor.execute("SELECT COUNT(*) as count FROM follows WHERE followingHandle = ?", (user_handle,))
     return cursor.fetchone()["count"]
 
+@app.route("/mod", methods=["GET", "POST"])
+def mod():
+    if request.method == "GET":
+        return render_template("mod.html")
+    if "id" in request.form:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM tweets WHERE id=?", (request.form["id"]))
+        db.commit()
+        return "Success"
+    return "Failed"
+
 
 if __name__ == "__main__":
     app.run(debug=False)
