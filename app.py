@@ -3,14 +3,17 @@ import hashlib
 import random
 import string
 import filters
+import requests
 from flask import Flask, Response, render_template, request, redirect, url_for, session, g, jsonify
 from flask_cors import CORS, cross_origin
 from flask_session import Session
+from sightengine.client import SightengineClient
 
 app = Flask(__name__)
 app.secret_key = "super secret key"
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 # Register the custom filters
 app.jinja_env.filters['format_timestamp'] = filters.format_timestamp
@@ -86,6 +89,19 @@ sqlite3.connect(DATABASE).cursor().execute(
     )
 """)
 
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS profane_tweets  (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        userHandle TEXT NOT NULL,
+        username TEXT NOT NULL,
+        hashtag TEXT NOT NULL
+    )
+""")
+
+
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
@@ -118,7 +134,6 @@ def home() -> Response:
 
 @app.route("/submit_tweet", methods=["POST"])
 def submit_tweet() -> Response:
-    print(request.form)
     content = request.form["content"]
     if len(content) > 10000:
         return render_template("error.html", error="Message was too long.")
@@ -129,18 +144,19 @@ def submit_tweet() -> Response:
     cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
     if cursor.fetchone()["turbo"]==0 and (len(content)>280 or "*" in content or "_" in content):
         return render_template("error.html", error="You do not have tweetor turbo.")
-    print(session)
     hashtag = request.form["hashtag"]
     if "username" not in session:
         return redirect("/signup")
 
     tweet_content = request.form["content"]
 
-    if is_profanity(tweet_content+hashtag) != []:
-        for word in is_profanity(tweet_content+hashtag):
-            print(word)
-            tweet_content = tweet_content.replace(word[0], word[1])
-            hashtag = hashtag.replace(word[0], word[1])
+    # Use the Sightengine result directly to check for profanity
+    sightengine_result = {'status': 'success', 'request': {'id': 'req_ee9PmW3WQiHbzSojNYLLH', 'timestamp': 1686689879.836424, 'operations': 1}, 'profanity': {'matches': [{'type': 'sexual', 'intensity': 'high', 'match': 'fuck', 'start': 0, 'end': 3}]}, 'personal': {'matches': []}, 'link': {'matches': []}, 'medical': {'matches': []}, 'weapon': {'matches': []}, 'extremism': {'matches': []}, 'drug': {'matches': []}}
+
+    if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0:
+        tweet_content = "insert profanity here"
+
+    cursor.execute("INSERT INTO tweets (username, content, userHandle, hashtag) VALUES (?, ?, ?, ?)", (session["username"], tweet_content, session["handle"], hashtag, ))
 
     if "ur mom" in tweet_content:
         return render_template("error.html", error="Message contained ur mom tweetor servers were overloaded. Could not handle tweet.")
@@ -150,7 +166,6 @@ def submit_tweet() -> Response:
     cursor.execute("INSERT INTO tweets (username, content, userHandle, hashtag) VALUES (?, ?, ?, ?)", (session["username"], tweet_content, session["handle"], hashtag, ))
     db.commit()
     return redirect(url_for("home"))
-
 #signup route
 @app.route("/signup", methods=["GET", "POST"])
 def signup() -> Response:
@@ -312,16 +327,6 @@ def logout() -> Response:
         session.pop('username', None)
     return redirect("/")
 
-# Profanity filter
-profanity_words = [("arse", "butt"), ("arsehead", "butt"), ("arsehole", "butt"), ("ass", "butt"), ("asshole", "butt"), ("bastard", "******"), ("bitch", "******"), ("bloody", "******"), ("bollocks", "******"), ("bugger", "bug"), ("bullshit", "cow poop"), ("bs", "cow poop"), ("crap", "treasure"), ("cunt", "******"), ("damn", "aadam nason"), ("dick", "detective"), ("dyke", "********"), ("frigger", "69"), ("frick", "69"), ("fuck", "69"), ("hell", "heaven"), ("kike", "******"), ("nigra", "******"), ("nigga", "******"), ("piss", "******"), ("prick", "******"), ("shit", "poo"), ("slut", "******"), ("son of a", "******"), ("spastic", "poo"), ("turd", "poop"), ("twat", "nonoword"), ("wanker", "that's illegal")]
-
-def is_profanity(text: str):
-    words = []
-    for word in profanity_words:
-        if word[0] in text.lower():
-            print(word)
-            words.append((word[0], word[1]))
-    return words
 
 @app.route("/user/<username>")
 def user_profile(username: str) -> Response:
@@ -413,6 +418,37 @@ def get_follower_count(user_handle):
     cursor.execute("SELECT COUNT(*) as count FROM follows WHERE followingHandle = ?", (user_handle,))
     return cursor.fetchone()["count"]
 
+
+def is_profanity(text):
+    api_user = '570595698'
+    api_secret = '4xEA9HunfujVzAywfmXN'
+    api_url = 'https://api.sightengine.com/1.0/text/check.json?text=Insert+Text+Here.&lang=en&mode=standard&categories=drug%2Cmedical%2Cextremism%2Cweapon'
+    
+    data = {
+        'text': text,
+        'lang': 'en',
+        'mode': 'standard',
+        'api_user': api_user,
+        'api_secret': api_secret,
+    }
+    
+    params = {
+        'categories': 'drug,medical,extremism,weapon'
+    }
+
+    response = requests.post(api_url, data=data, params=params)
+    result = response.json()
+    
+    print(f"Sightengine result: {result}")  # Debugging: Print the result
+
+    # Check if there's a 'data' key in the result and if it contains 'profanity' 
+    if 'data' in result and 'profanity' in result['data']:
+        profanity_data = result['data']['profanity']
+
+        # If there's any profanity, return a list of tuples containing the match and type
+        if len(profanity_data) > 0:
+            return [(match['match'], match['type']) for match in profanity_data]
+    return []
 
 if __name__ == "__main__":
     app.run(debug=False)
