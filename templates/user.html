@@ -10,6 +10,12 @@
   <div class="row">
     <div class="twelve columns">
       <h1>{{ user.username }}'s Profile</h1>
+      {% if loggedIn and session.username == "admin" %}
+        <form action="{{ url_for('delete_user') }}" method="post">
+          <input type="hidden" name="user_handle" value="{{ user.handle }}" />
+          <button type="submit">Delete User</button>
+        </form>
+      {% endif %}
 
       {% if session['username'] != user.username %}
         <!-- Follow button -->

@@ -1,6 +1,7 @@
 import sqlite3
 import hashlib
 import random
+from urllib.parse import quote
 import string
 import filters
 import requests
@@ -8,6 +9,7 @@ from flask import Flask, Response, render_template, request, redirect, url_for, 
 from flask_cors import CORS, cross_origin
 from flask_session import Session
 from sightengine.client import SightengineClient
+
 
 app = Flask(__name__)
 app.secret_key = "super secret key"
@@ -26,82 +28,6 @@ Session(app)
 
 DATABASE = "tweetor.db"
 
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS tweets  (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        userHandle TEXT NOT NULL,
-        username TEXT NOT NULL,
-        hashtag TEXT NOT NULL
-    )
-""")
-
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        turbo INTEGER DEFAULT 0,
-        handle TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
-    )
-""")
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS interests (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT NOT NULL,
-        hashtag TEXT NOT NULL,
-        importance INT NOT NULL
-    )
-""")
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS notifications (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user TEXT NOT NULL,
-        origin TEXT NOT NULL,
-        content TEXT NOT NULL,
-        viewed INTEGER DEFAULT 0
-    )
-""")
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS likes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        userHandle TEXT NOT NULL,
-        tweetId INTEGER NOT NULL
-    )
-""")
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS follows (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        followerHandle TEXT NOT NULL,
-        followingHandle TEXT NOT NULL
-    )
-""")
-
-sqlite3.connect(DATABASE).cursor().execute(
-    """
-    CREATE TABLE IF NOT EXISTS profane_tweets  (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        userHandle TEXT NOT NULL,
-        username TEXT NOT NULL,
-        hashtag TEXT NOT NULL
-    )
-""")
-
-
 def get_db():
     db = getattr(g, "_database", None)
     if db is None:
@@ -109,6 +35,113 @@ def get_db():
         db.row_factory = sqlite3.Row
     return db
 
+def add_profanity_column_if_not_exists():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("PRAGMA table_info(tweets)")
+        columns = cursor.fetchall()
+        column_names = [column[1] for column in columns]
+
+        if 'profane_tweet' not in column_names:
+            cursor.execute("ALTER TABLE tweets ADD COLUMN profane_tweet TEXT")
+            db.commit()
+            print("profane_tweet column added to the tweets table")
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS tweets  (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            profane_tweet TEXT,
+            userHandle TEXT NOT NULL,
+            username TEXT NOT NULL,
+            hashtag TEXT NOT NULL
+        )
+    """)
+
+add_profanity_column_if_not_exists()
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            turbo INTEGER DEFAULT 0,
+            handle TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL
+        )
+    """)
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS direct_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sender_handle TEXT NOT NULL,
+            receiver_handle TEXT NOT NULL,
+            content TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS reported_tweets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tweet_id INTEGER NOT NULL,
+            reporter_handle TEXT NOT NULL,
+            reason TEXT NOT NULL
+        )
+    """)
+    
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS interests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT NOT NULL,
+            hashtag TEXT NOT NULL,
+            importance INT NOT NULL
+        )
+    """)
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user TEXT NOT NULL,
+            origin TEXT NOT NULL,
+            content TEXT NOT NULL,
+            viewed INTEGER DEFAULT 0
+        )
+    """)
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS likes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userHandle TEXT NOT NULL,
+            tweetId INTEGER NOT NULL
+        )
+    """)
+
+with sqlite3.connect(DATABASE) as conn:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS follows (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            followerHandle TEXT NOT NULL,
+            followingHandle TEXT NOT NULL
+        )
+    """)
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -116,21 +149,49 @@ def close_connection(exception):
     if db is not None:
         db.close()
 
+def create_admin_if_not_exists():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = 'admin'")
+        admin_account = cursor.fetchone()
+        print("Admin account found:", admin_account)
+
+        if not admin_account:
+            hashed_password = hashlib.sha256("admin_password".encode()).hexdigest()
+            cursor.execute("INSERT INTO users (username, handle, password) VALUES (?, ?, ?)", ("admin", "admin", hashed_password))
+            db.commit()
+            print("Admin account created")
+
+if __name__ == "__main__":
+    with app.app_context():
+        create_admin_if_not_exists()
+    app.run(host='0.0.0.0', port=5000)
+
+create_admin_if_not_exists()
+
+def row_to_dict(row):
+    return {col[0]: row[idx] for idx, col in enumerate(row.description)}
 
 @app.route("/")
 def home() -> Response:
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
-    tweets = cursor.fetchall()  
+    
+    if "username" in session and session["username"] == "admin":
+        cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
+    else:
+        cursor.execute("SELECT * FROM tweets WHERE profane_tweet = 'no' ORDER BY timestamp DESC")
+    
+    tweets = cursor.fetchall()
+    print(tweets)
     if "username" in session:
         cursor = db.cursor()
         cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
         if cursor.fetchone()["turbo"]==1:
             return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=True)
         return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=False)
-    return render_template("home.html", tweets=tweets, loggedIn=("username" in session), nitro=False)
-
+    return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=False)
 
 @app.route("/submit_tweet", methods=["POST"])
 def submit_tweet() -> Response:
@@ -139,33 +200,30 @@ def submit_tweet() -> Response:
         return render_template("error.html", error="Message was too long.")
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
+    
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
-    if cursor.fetchone()["turbo"]==0 and (len(content)>280 or "*" in content or "_" in content):
-        return render_template("error.html", error="You do not have tweetor turbo.")
+    user_turbo = cursor.fetchone()["turbo"]
+    
+    if user_turbo == 0 and (len(content) > 280 or "*" in content or "_" in content):
+        return render_template("error.html", error="You do not have Tweetor Turbo.")
+    
     hashtag = request.form["hashtag"]
-    if "username" not in session:
-        return redirect("/signup")
-
-    tweet_content = request.form["content"]
-
+    
     # Use the Sightengine result directly to check for profanity
-    sightengine_result = {'status': 'success', 'request': {'id': 'req_ee9PmW3WQiHbzSojNYLLH', 'timestamp': 1686689879.836424, 'operations': 1}, 'profanity': {'matches': [{'type': 'sexual', 'intensity': 'high', 'match': 'fuck', 'start': 0, 'end': 3}]}, 'personal': {'matches': []}, 'link': {'matches': []}, 'medical': {'matches': []}, 'weapon': {'matches': []}, 'extremism': {'matches': []}, 'drug': {'matches': []}}
-
+    sightengine_result = is_profanity(content)
+    profane_tweet = "no"
+    
     if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0:
-        tweet_content = "insert profanity here"
-
-    cursor.execute("INSERT INTO tweets (username, content, userHandle, hashtag) VALUES (?, ?, ?, ?)", (session["username"], tweet_content, session["handle"], hashtag, ))
-
-    if "ur mom" in tweet_content:
-        return render_template("error.html", error="Message contained ur mom tweetor servers were overloaded. Could not handle tweet.")
-
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("INSERT INTO tweets (username, content, userHandle, hashtag) VALUES (?, ?, ?, ?)", (session["username"], tweet_content, session["handle"], hashtag, ))
+        profane_tweet = "yes"
+    
+    # Insert the tweet into the database
+    cursor.execute("INSERT INTO tweets (username, content, userHandle, hashtag, profane_tweet) VALUES (?, ?, ?, ?, ?)", (session["username"], content, session["handle"], hashtag, profane_tweet, ))
+    
     db.commit()
-    return redirect(url_for("home"))
+    return redirect(url_for('home'))
+
 #signup route
 @app.route("/signup", methods=["GET", "POST"])
 def signup() -> Response:
@@ -229,6 +287,7 @@ def login() -> Response:
             session["handle"] = handle
             session["username"] = users[0]["username"]
         return redirect("/")
+    
     if "username" in session:
         return redirect("/")
     return render_template("login.html")
@@ -404,7 +463,17 @@ def follow_user():
         return redirect(f'/user/{following_username}')
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/profanity")
+def profanity() -> Response:
+    if "username" not in session or session["username"] != "admin":
+        return render_template("error.html", error="You are not authorized to view this page.")
 
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM tweets WHERE profane_tweet = 'yes' ORDER BY timestamp DESC")
+    profane_tweet = cursor.fetchall()
+    return render_template("profanity.html", profane_tweet=profane_tweet, loggedIn=("username" in session))
 
 def get_like_count(tweet_id):
     db = get_db()
@@ -422,7 +491,7 @@ def get_follower_count(user_handle):
 def is_profanity(text):
     api_user = '570595698'
     api_secret = '4xEA9HunfujVzAywfmXN'
-    api_url = 'https://api.sightengine.com/1.0/text/check.json?text=Insert+Text+Here.&lang=en&mode=standard&categories=drug%2Cmedical%2Cextremism%2Cweapon'
+    api_url = f'https://api.sightengine.com/1.0/text/check.json?text={quote(text)}&lang=en&mode=standard&categories=drug%2Cmedical%2Cextremism%2Cweapon'
     
     data = {
         'text': text,
@@ -441,14 +510,100 @@ def is_profanity(text):
     
     print(f"Sightengine result: {result}")  # Debugging: Print the result
 
-    # Check if there's a 'data' key in the result and if it contains 'profanity' 
-    if 'data' in result and 'profanity' in result['data']:
-        profanity_data = result['data']['profanity']
+    return result  # Return the result instead of an empty list
 
-        # If there's any profanity, return a list of tuples containing the match and type
-        if len(profanity_data) > 0:
-            return [(match['match'], match['type']) for match in profanity_data]
-    return []
+@app.route("/delete_tweet", methods=["POST"])
+def delete_tweet() -> Response:
+    if "username" not in session or session["username"] != "admin":
+        return render_template("error.html", error="You are not authorized to perform this action.")
+
+    tweet_id = request.form["tweet_id"]
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM tweets WHERE id = ?", (tweet_id,))
+    db.commit()
+
+    return redirect(url_for("profanity"))
+
+
+@app.route("/delete_user", methods=["POST"])
+def delete_user() -> Response:
+    if "username" not in session or session["username"] != "admin":
+        return render_template("error.html", error="You are not authorized to perform this action.")
+
+    user_handle = request.form["user_handle"]
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM users WHERE handle = ?", (user_handle,))
+    db.commit()
+
+    return redirect(url_for("home"))
+
+@app.route("/report_tweet", methods=["POST"])
+def report_tweet():
+    tweet_id = request.form["tweet_id"]
+    reporter_handle = session["handle"]
+    reason = request.form["reason"]
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO reported_tweets (tweet_id, reporter_handle, reason) VALUES (?, ?, ?)", (tweet_id, reporter_handle, reason))
+    db.commit()
+
+    return redirect(url_for("home"))
+
+@app.route("/reported_tweets")
+def reported_tweets():
+    if session["username"] != "admin":
+        return render_template("error.html", error="You don't have permission to access this page.")
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM reported_tweets")
+    reports = cursor.fetchall()
+
+    return render_template("reported_tweets.html", reports=reports)
+
+@app.route("/dm/<receiver_handle>")
+def direct_messages(receiver_handle):
+    if "username" not in session:
+        return render_template("error.html", error="You are not logged in.")
+    
+    sender_handle = session["handle"]
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        SELECT * FROM direct_messages
+        WHERE (sender_handle = ? AND receiver_handle = ?)
+        OR (sender_handle = ? AND receiver_handle = ?)
+        ORDER BY timestamp DESC
+    """, (sender_handle, receiver_handle, receiver_handle, sender_handle))
+
+    messages = cursor.fetchall()
+
+    return render_template("direct_messages.html", messages=messages, receiver_handle=receiver_handle)
+
+@app.route("/submit_dm/<receiver_handle>", methods=["POST"])
+def submit_dm(receiver_handle):
+    if "username" not in session:
+        return render_template("error.html", error="You are not logged in.")
+    
+    sender_handle = session["handle"]
+    content = request.form["content"]
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        INSERT INTO direct_messages (sender_handle, receiver_handle, content)
+        VALUES (?, ?, ?)
+    """, (sender_handle, receiver_handle, content))
+
+    db.commit()
+
+    return redirect(url_for("direct_messages", receiver_handle=receiver_handle))
 
 if __name__ == "__main__":
     app.run(debug=False)
