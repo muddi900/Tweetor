@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reported Tweets</title>
+    <!-- Add your CSS styles here -->
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reported Tweets</h1>
+    <table>
+        <tr>
+            <th>Tweet ID</th>
+            <th>Reporter Handle</th>
+            <th>Reason</th>
+        </tr>
+        {% for report in reports %}
+            <tr>
+                <td>{{ report.tweet_id }}</td>
+                <td>{{ report.reporter_handle }}</td>
+                <td>{{ report.reason }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

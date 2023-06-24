@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>{% block title %}{% endblock %} | Tweetor</title>
-	<script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-	<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>{% block title %}{% endblock %} | Tweetor</title>
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
     <meta name="keywords" content="Social Media, Twitter, Tweetor">
     <meta name="description" content="Non-toxic social media friendly to all with algorithms that stop toxic behavior">
@@ -13,29 +13,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-	<div class="w3-sidebar w3-black w3-bar-block" style="width:10%;border-right: 1px solid #555;">
-		<div class="logo">
+    <div class="w3-sidebar w3-black w3-bar-block" style="width:10%;border-right: 1px solid #555;">
+        <div class="logo">
             <a href="/">
-		        <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
             </a>
-		</div>
-		<div class="pages">
-			{% if not loggedIn %}
-				<div>
-					<a href="{{ url_for('login') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Login</a>
-					<a href="{{ url_for('signup') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Signup</a>
-				</div>
-			{% else %}
-				<a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span></a>
-				<a href="{{ url_for('search') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="material-symbols:search"></span></a>
-			    <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span></a>
-			{% endif %}
-		</div>
-	</div>
-	<div style="margin-left:10%;">
+        </div>
+        <div class="pages">
+            {% if not loggedIn %}
+                <div>
+                    <a href="{{ url_for('login') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Login</a>
+                    <a href="{{ url_for('signup') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Signup</a>
+                </div>
+            {% else %}
+                <a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span></a>
+                <a href="{{ url_for('search') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="material-symbols:search"></span></a>
+                <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span></a>
+                {% block admin_buttons %}{% endblock %}
+            {% endif %}
+        </div>
+    </div>
+    <div style="margin-left:10%;">
     {% block body %}
 
     {% endblock %}
-	</div>
+    </div>
 </body>
 </html>

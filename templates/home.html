@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Home {% endblock %}
+{% block title %}Home{% endblock %}
 
 {% block body %}
 <br>
@@ -12,10 +12,7 @@
       <form action="/submit_tweet" method="post" id="post_tweet">
         <div class="row">
           <div class="twelve columns">
-            <div name="field" autocomplete="off" id="field" role="textbox" contenteditable="true" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="tweet-content-input u-full-width" placeholder="What is happening?!" form="post_tweet">
-
-            </div>
-            <input type="hidden" name="content" id="tweet-input">
+            <textarea name="content" autocomplete="off" id="field" role="textbox" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="tweet-content-input u-full-width" placeholder="Placehodler Text"></textarea>
             <input type="text" name="hashtag" autocomplete="off" id="hashtag" class="u-full-width" placeholder="Hashtag">
           </div>
         </div>
@@ -38,27 +35,56 @@
       <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
       <span>&#160;·&#160;</span>
       <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
+      {% if loggedIn and session.username == "admin" %}
+        <a href="{{ url_for('delete_tweet', tweet_id=tweet.id) }}" style="float: right;"><button style="border: none;"><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a>
+      {% endif %}
+      {% if loggedIn %}
+        <button onclick="openReportModal('{{ tweet.id }}')" style="float: right; border: none;"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>
+      {% endif %}
     </div>
     <div class="tweet-content">
       <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
     </div>
-
   </div>
 {% endfor %}
+<div id="reportModal" class="modal">
+  <div class="modal-content">
+    <h4>Report Tweet</h4>
+    <form id="reportForm" action="{{ url_for('report_tweet') }}" method="post">
+      <input type="hidden" name="tweet_id" id="modalTweetId" />
+      <label for="reason">Reason for reporting:</label>
+      <input type="text" name="reason" id="reason" required />
+      <button type="submit">Submit Report</button>
+    </form>
+  </div>
+</div>
+  ...
+  <h3>Direct Messages</h3>
+  <ul>
+    {% for dm in engaged_dms %}
+      <li>
+        <a href="{{ url_for('direct_messages', receiver_handle=dm['receiver_handle']) }}">{{ dm['receiver_handle'] }}</a>
+      </li>
+    {% endfor %}
+  </ul>
 
 {% if turbo %}
 <script>
-  function formatTweet(content) {
-    // Replace double asterisks (**) with HTML tags for bold
-    let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '**<strong>$1</strong>**');
+function formatTweet(content, hashtag) {
+  // Replace double asterisks (**) with HTML tags for bold
+  let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>\\$1</strong>');
 
-    // Replace single asterisks (*) with HTML tags for italic
-    formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '$1*<em>$2</em>*$3');
+  // Replace single asterisks (*) with HTML tags for italic
+  formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '\\$1<em>\\$2</em>\\$3');
 
-    // Replace double underscores (__) with HTML tags for underlines
-    formattedContent = formattedContent.replace(/__(.*?)__/g, '__<u>$1</u>__');
-    return formattedContent.trimEllip(10000);
-  }
+  // Replace double underscores (__) with HTML tags for underlines
+  formattedContent = formattedContent.replace(/__(.*?)__/g, '<u>\\$1</u>');
+
+  // Append the hashtag to the formatted content
+  formattedContent += ' ' + hashtag;
+
+  return formattedContent.trimEllip(10000);
+}
   console.log("You have Tweetor turbo")
 </script>
 {% else %}
@@ -70,28 +96,26 @@
 {% endif %}
 
 <script>
-    String.prototype.trimEllip = function (length) {
-      return this.length > length ? this.substring(0, length) : this;
-    }
+  String.prototype.trimEllip = function (length) {
+    return this.length > length ? this.substring(0, length) : this;
+  }
+
   // Get the textarea element and the form input element
   const textarea = document.getElementById('field');
-  const tweetInput = document.getElementById('tweet-input');
+  const tweetInput = document.querySelector('form#post_tweet input[name="content"]');
 
   textarea.addEventListener('input', function() {
-    let content = textarea.innerText;
+    let content = textarea.value;
 
     const formattedContent = formatTweet(content);
 
-    // Set the formatted content as the innerHTML of the textarea
-    textarea.innerHTML = formattedContent;
+    // Set the formatted content as the value of the textarea
+    textarea.value = formattedContent;
 
     // Update the form input value with the formatted content
     tweetInput.value = content.trimEllip(280);
-    console.log(tweetInput.value)
-    console.log(textarea.innerHTML)
-
-    // Move the cursor to the end of the textarea
-    moveCursorToEnd(textarea);
+    console.log(tweetInput.value);
+    console.log(textarea.value);
   });
 
   // Function to move the cursor to the end of the textarea
@@ -103,6 +127,19 @@
     selection.removeAllRanges();
     selection.addRange(range);
     element.focus();
+  }
+  const reportModal = document.getElementById('reportModal');
+  const modalTweetId = document.getElementById('modalTweetId');
+
+  function openReportModal(tweetId) {
+    modalTweetId.value = tweetId;
+    reportModal.style.display = 'block';
+  }
+
+  window.onclick = function(event) {
+    if (event.target == reportModal) {
+      reportModal.style.display = 'none';
+    }
   }
 </script>
 {% endblock %}
