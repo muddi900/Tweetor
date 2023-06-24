@@ -1,6 +1,6 @@
-# Tweeter
+# Tweetor
 
-Tweeter is a Twitter clone built using Flask, SQLite, and Jinja templates. It allows users to sign up, log in, post tweets, view user profiles, and interact with tweets.
+Tweetor is a Twitter clone built using Flask, SQLite, and Jinja templates. It allows users to sign up, log in, post tweets, view user profiles, and interact with tweets.
 
 ## Features
 

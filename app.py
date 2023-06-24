@@ -10,7 +10,6 @@ from flask_cors import CORS, cross_origin
 from flask_session import Session
 from sightengine.client import SightengineClient
 
-
 app = Flask(__name__)
 app.secret_key = "super secret key"
 cors = CORS(app)
@@ -27,6 +26,81 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 DATABASE = "tweetor.db"
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS tweets  (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        userHandle TEXT NOT NULL,
+        username TEXT NOT NULL,
+        hashtag TEXT NOT NULL
+    )
+""")
+
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        turbo INTEGER DEFAULT 0,
+        handle TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+    )
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS interests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT NOT NULL,
+        hashtag TEXT NOT NULL,
+        importance INT NOT NULL
+    )
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user TEXT NOT NULL,
+        origin TEXT NOT NULL,
+        content TEXT NOT NULL,
+        viewed INTEGER DEFAULT 0
+    )
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userHandle TEXT NOT NULL,
+        tweetId INTEGER NOT NULL
+    )
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS follows (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        followerHandle TEXT NOT NULL,
+        followingHandle TEXT NOT NULL
+    )
+""")
+
+sqlite3.connect(DATABASE).cursor().execute(
+    """
+    CREATE TABLE IF NOT EXISTS profane_tweets  (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        userHandle TEXT NOT NULL,
+        username TEXT NOT NULL,
+        hashtag TEXT NOT NULL
+    )
+""")
 
 def get_db():
     db = getattr(g, "_database", None)
@@ -205,7 +279,6 @@ def submit_tweet() -> Response:
     
     db.commit()
     return redirect(url_for('home'))
-
 #signup route
 @app.route("/signup", methods=["GET", "POST"])
 def signup() -> Response:
