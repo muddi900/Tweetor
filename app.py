@@ -114,18 +114,6 @@ with sqlite3.connect(DATABASE) as conn:
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(
         """
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user TEXT NOT NULL,
-            origin TEXT NOT NULL,
-            content TEXT NOT NULL,
-            viewed INTEGER DEFAULT 0
-        )
-    """)
-
-with sqlite3.connect(DATABASE) as conn:
-    conn.execute(
-        """
         CREATE TABLE IF NOT EXISTS likes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             userHandle TEXT NOT NULL,
@@ -163,11 +151,6 @@ def create_admin_if_not_exists():
             db.commit()
             print("Admin account created")
 
-# if __name__ == "__main__":
-#     with app.app_context():
-#         create_admin_if_not_exists()
-#     app.run(host='0.0.0.0', port=5000)
-
 create_admin_if_not_exists()
 
 def row_to_dict(row):
@@ -178,7 +161,7 @@ def home() -> Response:
     db = get_db()
     cursor = db.cursor()
     
-    if "username" in session and session["username"] == "admin":
+    if "username" in session and session["handle"] == "admin":
         cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
     else:
         cursor.execute("SELECT * FROM tweets WHERE profane_tweet = 'no' ORDER BY timestamp DESC")
@@ -463,7 +446,7 @@ def follow_user():
     
 @app.route("/profanity")
 def profanity() -> Response:
-    if "username" not in session or session["username"] != "admin":
+    if "username" in session and session["handle"] != "admin":
         return render_template("error.html", error="You are not authorized to view this page.")
 
     db = get_db()
@@ -523,7 +506,7 @@ def is_profanity(text):
 
 @app.route("/delete_tweet", methods=["GET"])
 def delete_tweet() -> Response:
-    if "username" not in session or session["username"] != "admin":
+    if "username" in session and session["handle"] != "admin":
         return render_template("error.html", error="You are not authorized to perform this action.")
 
     tweet_id = request.args.get("tweet_id")
@@ -532,12 +515,12 @@ def delete_tweet() -> Response:
     cursor.execute("DELETE FROM tweets WHERE id = ?", (tweet_id,))
     db.commit()
 
-    return redirect(url_for("home"))
+    return redirect(url_for("reported_tweets"))
 
 
 @app.route("/delete_user", methods=["POST"])
 def delete_user() -> Response:
-    if "username" not in session or session["username"] != "admin":
+    if "username" in session and session["handle"] != "admin":
         return render_template("error.html", error="You are not authorized to perform this action.")
 
     user_handle = request.form["user_handle"]
@@ -563,7 +546,7 @@ def report_tweet():
 
 @app.route("/reported_tweets")
 def reported_tweets():
-    if session["username"] != "admin":
+    if "username" in session and session["handle"] != "admin":
         return render_template("error.html", error="You don't have permission to access this page.")
 
     db = get_db()

@@ -47,26 +47,15 @@
     </div>
   </div>
 {% endfor %}
-<div id="reportModal" class="modal">
-  <div class="modal-content">
-    <h4>Report Tweet</h4>
-    <form id="reportForm" action="{{ url_for('report_tweet') }}" method="post">
-      <input type="hidden" name="tweet_id" id="modalTweetId" />
-      <label for="reason">Reason for reporting:</label>
-      <input type="text" name="reason" id="reason" required />
-      <button type="submit">Submit Report</button>
-    </form>
-  </div>
-</div>
-  ...
-  <h3>Direct Messages</h3>
-  <ul>
-    {% for dm in engaged_dms %}
-      <li>
-        <a href="{{ url_for('direct_messages', receiver_handle=dm['receiver_handle']) }}">{{ dm['receiver_handle'] }}</a>
-      </li>
-    {% endfor %}
-  </ul>
+...
+<h3>Direct Messages</h3>
+<ul>
+  {% for dm in engaged_dms %}
+    <li>
+      <a href="{{ url_for('direct_messages', receiver_handle=dm['receiver_handle']) }}">{{ dm['receiver_handle'] }}</a>
+    </li>
+  {% endfor %}
+</ul>
 
 {% if turbo %}
 <script>
@@ -128,18 +117,6 @@ function formatTweet(content, hashtag) {
     selection.addRange(range);
     element.focus();
   }
-  const reportModal = document.getElementById('reportModal');
-  const modalTweetId = document.getElementById('modalTweetId');
 
-  function openReportModal(tweetId) {
-    modalTweetId.value = tweetId;
-    reportModal.style.display = 'block';
-  }
-
-  window.onclick = function(event) {
-    if (event.target == reportModal) {
-      reportModal.style.display = 'none';
-    }
-  }
 </script>
 {% endblock %}
