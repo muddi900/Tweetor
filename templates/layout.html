@@ -1,41 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>{% block title %}{% endblock %} | Tweetor</title>
-	<script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-	<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-	<link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
-    <meta name="keywords" content="Social Media, Twitter, Tweetor">
-    <meta name="description" content="Non-toxic social media friendly to all with algorithms that stop toxic behavior">
-    <meta name="author" content="Heinrich Xiao">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{% endblock %} | Tweetor</title>
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="icon" type="image" href="{{ url_for('static', filename='logo.png')}}">
+  <meta name="keywords" content="Social Media, Twitter, Tweetor">
+  <meta name="description" content="Non-toxic social media friendly to all with algorithms that stop toxic behavior">
+  <meta name="author" content="Heinrich Xiao">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-	<div class="w3-sidebar w3-black w3-bar-block" style="width:10%;border-right: 1px solid #555;">
-		<div class="logo">
-            <a href="/">
-		        <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
-            </a>
-		</div>
-		<div class="pages">
-			{% if not loggedIn %}
-				<div>
-					<a href="{{ url_for('login') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Login</a>
-					<a href="{{ url_for('signup') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Signup</a>
-				</div>
-			{% else %}
-				<a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span></a>
-				<a href="{{ url_for('search') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="material-symbols:search"></span></a>
-			    <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span></a>
-			{% endif %}
-		</div>
-	</div>
-	<div style="margin-left:10%;">
+  <div class="w3-sidebar w3-black w3-bar-block" style="width:10%;border-right: 1px solid #555;">
+    <div class="logo">
+      <a href="/">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Tweeter Logo">
+      </a>
+    </div>
+    <div class="pages">
+      {% if not loggedIn %}
+        <div>
+            <a href="{{ url_for('login') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Login</a>
+            <a href="{{ url_for('signup') }}" class="w3-bar-item w3-button"><span class="iconify" data-icon="mdi:account"></span> Signup</a>
+        </div>
+      {% else %}
+        <a href="{{ url_for('home') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ic:round-home"></span></a>
+        <a href="{{ url_for('search') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="material-symbols:search"></span></a>
+        <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span></a>
+        {% block admin_buttons %}{% endblock %}
+      {% endif %}
+    </div>
+  </div>
+  <div style="margin-left:10%;">
     {% block body %}
 
     {% endblock %}
-	</div>
+    <div class="form-popup" id="reportModal">
+      <form action="{{ url_for('report_tweet') }}" class="form-container" method="post">
+        <h1>Report Tweet</h1>
+      
+        <label for="tweet_id">Tweet ID (Do not change if filled out automatically): </label>
+        <input type="number" name="tweet_id" id="modalTweetId"/>
+      
+        <label for="reason"><b>Reason: </b></label>
+        <input type="text" placeholder="Enter Reason" name="reason" required>
+      
+        <button type="submit" class="btn">Submit Report</button>
+        <button type="button" class="btn cancel" onclick="closeForm()">Cancel</button>
+      </form>
+    </div>
+
+  </div>
+  <script>
+    const reportModal = document.getElementById('reportModal');
+    const modalTweetId = document.getElementById('modalTweetId');
+
+    function openReportModal(tweetId) {
+      modalTweetId.value = tweetId;
+      reportModal.style.display = 'block';
+    }
+
+    window.onclick = function (event) {
+      if (event.target == reportModal) {
+        reportModal.style.display = 'none';
+      }
+    }
+
+    function closeForm() {
+      reportModal.style.display = 'none';
+    }
+  </script>
+  {% if loggedIn %}
+    <script>
+      document.querySelectorAll(".like-btn").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          const tweetId = e.target.dataset.tweetId;
+          const response = await fetch("/like_tweet", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `tweetId=${tweetId}`,
+          });
+          if (response.ok) {
+            // Update the like count on the front-end
+          }
+        });
+      });
+    </script>
+  {% endif %}
 </body>
 </html>

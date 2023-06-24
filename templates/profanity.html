@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+
+{% block title %}Profane Tweets{% endblock %}
+
+{% block body %}
+<br>
+<br>
+<br>
+{% for tweet in profane_tweet %}
+  <div class="tweet">
+    <div class="tweet-username tweet-timestamp">
+      <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+      <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
+      <span>&#160;·&#160;</span>
+      <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
+    </div>
+    <div class="tweet-content">
+      <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
+    </div>
+  </div>
+{% endfor %}
+
+{% if turbo %}
+<script>
+  function formatTweet(content, hashtag) {
+    // Replace double asterisks (**) with HTML tags for bold
+    let formattedContent = content.replace(/\*\*(.*?)\*\*/g, '<strong>\$1</strong>');
+
+    // Replace single asterisks (*) with HTML tags for italic
+    formattedContent = formattedContent.replace(/(^|\W)\*(\w.*?)\*($|\W)/g, '\$1<em>\$2</em>\$3');
+
+    // Replace double underscores (__) with HTML tags for underlines
+    formattedContent = formattedContent.replace(/__(.*?)__/g, '<u>\$1</u>');
+
+    // Append the hashtag to the formatted content
+    formattedContent += ' ' + hashtag;
+
+    return formattedContent.trimEllip(10000);
+  }
+  console.log("You have Tweetor turbo")
+</script>
+{% else %}
+<script>
+  function formatTweet(content) {
+    return content.replace('*', '').replace('_', '').trimEllip(280);
+  }
+</script>
+{% endif %}
+
+<script>
+  String.prototype.trimEllip = function (length) {
+    return this.length > length ? this.substring(0, length) : this;
+  }
+</script>
+{% endblock %}
