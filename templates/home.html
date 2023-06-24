@@ -31,24 +31,20 @@
 {% for tweet in tweets %}
   <div class="tweet">
     <div class="tweet-username tweet-timestamp">
-      <a href="/user/{{ tweet[1] }}">{{ tweet[0] }}</a>&#160;&#160;
-      <a href="/user/{{ tweet[1] }}" class="user-handle">@{{ tweet[1] }}</a>
-      <a href="/tweets/{{ tweet[2] }}">{{ tweet[3]|format_tweet }} {{ tweet[4] }}</a>
+      <a href="/user/{{ tweet.userHandle }}">{{ tweet.username }}</a>&#160;&#160;
+      <a href="/user/{{ tweet.userHandle }}" class="user-handle">@{{ tweet.userHandle }}</a>
       <span>&#160;·&#160;</span>
       <a href="/tweets/{{ tweet.id }}" class="user-handle">{{ tweet.timestamp|format_timestamp }}</a>
+      {% if loggedIn and session.username == "admin" %}
+        <a href="{{ url_for('delete_tweet', tweet_id=tweet.id) }}" style="float: right;"><button style="border: none;"><span class="iconify" data-icon="material-symbols:delete" data-width="25"></span></button></a>
+      {% endif %}
+      {% if loggedIn %}
+        <button onclick="openReportModal('{{ tweet.id }}')" style="float: right; border: none;"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>
+      {% endif %}
     </div>
     <div class="tweet-content">
       <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
     </div>
-    {% if loggedIn and session.username == "admin" %}
-    <form action="{{ url_for('delete_tweet') }}" method="post">
-      <input type="hidden" name="tweet_id" value="{{ tweet.id }}" />
-      <button type="submit">Delete Tweet</button>
-    </form>
-    {% endif %}
-    {% if loggedIn %}
-      <button onclick="openReportModal('{{ tweet.id }}')">Report Tweet</button>
-    {% endif %}
   </div>
 {% endfor %}
 <div id="reportModal" class="modal">

@@ -163,10 +163,10 @@ def create_admin_if_not_exists():
             db.commit()
             print("Admin account created")
 
-if __name__ == "__main__":
-    with app.app_context():
-        create_admin_if_not_exists()
-    app.run(host='0.0.0.0', port=5000)
+# if __name__ == "__main__":
+#     with app.app_context():
+#         create_admin_if_not_exists()
+#     app.run(host='0.0.0.0', port=5000)
 
 create_admin_if_not_exists()
 
@@ -184,7 +184,6 @@ def home() -> Response:
         cursor.execute("SELECT * FROM tweets WHERE profane_tweet = 'no' ORDER BY timestamp DESC")
     
     tweets = cursor.fetchall()
-    print(tweets)
     if "username" in session:
         cursor = db.cursor()
         cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
@@ -355,7 +354,6 @@ def searchAPI() -> Response:
     if request.args.get("query"):
         conn = get_db()
         c = conn.cursor()
-        print(request.args.get("query"))
 
         # Find query
         c.execute("SELECT * FROM tweets WHERE content LIKE ?", (f"%{request.args.get('query')}%", ))
@@ -371,7 +369,6 @@ def search() -> Response:
     if request.args.get("query"):
         conn = get_db()
         c = conn.cursor()
-        print(request.args.get("query"))
 
         # Find query
         c.execute("SELECT * FROM tweets WHERE content LIKE ? OR hashtag LIKE ?", (f"%{request.args.get('query')}%", f"%{request.args.get('query')}%", ))
@@ -512,18 +509,18 @@ def is_profanity(text):
 
     return result  # Return the result instead of an empty list
 
-@app.route("/delete_tweet", methods=["POST"])
+@app.route("/delete_tweet", methods=["GET"])
 def delete_tweet() -> Response:
     if "username" not in session or session["username"] != "admin":
         return render_template("error.html", error="You are not authorized to perform this action.")
 
-    tweet_id = request.form["tweet_id"]
+    tweet_id = request.args.get("tweet_id")
     db = get_db()
     cursor = db.cursor()
     cursor.execute("DELETE FROM tweets WHERE id = ?", (tweet_id,))
     db.commit()
 
-    return redirect(url_for("profanity"))
+    return redirect(url_for("home"))
 
 
 @app.route("/delete_user", methods=["POST"])
