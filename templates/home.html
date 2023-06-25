@@ -10,11 +10,20 @@
   <div class="row">
     <div class="six columns offset-by-three">
       <form action="/submit_tweet" method="post" id="post_tweet">
+        <input type="hidden" name="text0" id="text0">
+        <input type="hidden" name="text1" id="text1">
+        <input type="hidden" name="template_id" id="template_id">
         <div class="row">
           <div class="twelve columns">
             <textarea name="content" autocomplete="off" id="field" role="textbox" aria-multiline="true" aria-labelledby="txtboxMultilineLabel" aria-required="true" class="tweet-content-input u-full-width" placeholder="Placehodler Text"></textarea>
             <input type="text" name="hashtag" autocomplete="off" id="hashtag" class="u-full-width" placeholder="Hashtag">
           </div>
+        </div>
+        <div class="row">
+          <button style="border: none;" onclick="makeMeme()" form=""><span class="iconify" data-icon="arcticons:meme-generator" data-width="50"></span></button>
+        </div>
+        <div id="addedElements">
+
         </div>
         <div class="row">
           <div class="twelve columns">
@@ -44,6 +53,10 @@
     </div>
     <div class="tweet-content">
       <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
+      {% if tweet.meme_link %}
+        <br>
+        <img src="{{ tweet.meme_link }}" alt="{{ tweet.content }}">
+      {% endif %}
     </div>
   </div>
 {% endfor %}
@@ -56,6 +69,16 @@
     </li>
   {% endfor %}
 </ul>
+
+<div class="form-popup" id="memePopup">
+  <h1>Make-A-Meme</h1>
+
+  <div id="memeBackgrounds"></div>
+
+  <button type="button" class="btn" id="updateMeme" onclick="updateMeme()">Update Meme</button>
+  <button type="button" class="btn" id="addMeme" onclick="addMeme()">Add Meme</button>
+  <button type="button" class="btn cancel" onclick="closeMeme()">Cancel</button>
+</div>
 
 {% if turbo %}
 <script>
@@ -119,4 +142,144 @@ function formatTweet(content, hashtag) {
   }
 
 </script>
+<script defer>
+  let meme = document.querySelector('#memePopup');
+  let memeImages = document.querySelector('#memeBackgrounds');
+  let addMemeButton = document.querySelector('#addMeme');
+  let updateMemeButton = document.querySelector('#updateMeme');
+  let finalMemeURL;
+  let selectedMemeBG;
+  function closeMeme() {
+    meme.style.display = 'none';
+  }
+
+  async function makeMeme() {
+    meme.style.display = 'block';
+    addMemeButton.style.display = 'none';
+    updateMemeButton.style.display = 'none';
+    const response = await fetch("https://api.imgflip.com/get_memes");
+    const data = await response.json();
+
+    if (data["success"]) {
+      const memes = data.data.memes;
+      let memeIndex = 0;
+      memes.forEach((meme, index) => {
+        if (memeIndex < 15 && meme.box_count==2) {
+          console.log(meme);
+
+          // Create the button
+          const button = document.createElement("button");
+          console.log(meme.id)
+          
+          button.setAttribute("data-url", meme.url);
+          button.setAttribute("data-memeid", meme.id);
+          button.setAttribute("data-box-count", meme.box_count);
+          button.onclick = (e) => {
+            addMemeButton.style.display = 'inline';
+            updateMemeButton.style.display = 'inline';
+            memeImages.innerHTML = '';
+            selectedMemeBG = e.target.dataset.memeid;
+            console.log(e.target.dataset.memeid)
+            const selectedImage = document.createElement("img");
+            image.setAttribute("src", e.target.dataset.url || e.target.src);
+            image.setAttribute("height", "200px");
+            image.setAttribute("id", "selectedImage");
+            const boxes = document.createElement("form");
+            boxes.submit(function(e) {
+                e.preventDefault();
+                console.dir(e)
+            });
+            for (let i = 0; i < meme.box_count; i++) {
+              const input = document.createElement("input");
+              input.setAttribute("type", "text");
+              input.setAttribute("id", `box${i}`);
+              input.setAttribute("placeholder", `Text ${i+1}`);
+              
+              boxes.appendChild(document.createElement("br"));
+              boxes.appendChild(input);
+            }
+
+
+            memeImages.appendChild(image);
+            memeImages.appendChild(boxes);
+            memeImages.setAttribute("id", "");
+          };
+
+          // Create Image
+          let image = document.createElement("img");
+          
+          image.setAttribute("src", meme.url);
+          image.setAttribute("height", "100px");
+          image.setAttribute("data-memeid", meme.id);
+          console.log(image.dataset)
+
+          // Resize the button to the size of the image
+          button.setAttribute("class", "memeBg");
+          button.setAttribute("style", `height:100px;width:${image.scrollWidth}px;margin-left: 0px;`);
+
+          // Add image to button
+          button.appendChild(image);
+
+          // Add space between images
+          let vr = document.createElement("div");
+          vr.setAttribute("style", "height:0px;width:10px;");
+
+          // Add everything to the div
+          memeImages.appendChild(button);
+          memeImages.appendChild(vr);
+          memeIndex++;
+        }
+      });
+    }
+  }
+  async function updateMeme() {
+    let text1 = document.querySelector("#box0");
+    let text2 = document.querySelector("#box1");
+    
+    console.log(text1.value, text2.value);
+
+    console.log(selectedMemeBG)
+    const data = {
+      template_id: selectedMemeBG,
+      username: "tweetor_official",
+      password: "tweetor_password",
+      text0: text1.value,
+      text1: text2.value
+    };
+
+    const urlEncodedData = Object.keys(data).map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(data[key])).join("&");
+
+    const response = await fetch("https://api.imgflip.com/caption_image", {
+      method: "POST",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: urlEncodedData,
+    });
+
+    const json = await response.json();
+    console.log(json);// parses JSON response into native JavaScript objects
+    if (json["success"]) {
+      document.querySelector("#selectedImage").src = json.data.url;
+      finalMemeURL = json.data.url;
+    }
+  }
+  function addMeme() {
+    const templateIdInput = document.querySelector("#template_id")
+    const text0Input = document.querySelector("#text0");
+    const text1Input = document.querySelector("#text1");
+    const box0Input = document.querySelector("#box0");
+    const box1Input = document.querySelector("#box1");
+
+    text0Input.value = box0Input.value;
+    text1Input.value = box1Input.value;
+    templateIdInput.value = selectedMemeBG;
+
+    meme.style.display = 'none';
+    document.querySelector("#addedElements").appendChild(document.querySelector("#selectedImage"));
+  }
+</script>
+
+
 {% endblock %}
