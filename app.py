@@ -586,6 +586,7 @@ def delete_tweet() -> Response:
     db = get_db()
     cursor = db.cursor()
     cursor.execute("DELETE FROM tweets WHERE id = ?", (tweet_id,))
+    cursor.execute("DELETE FROM reported_tweets WHERE tweet_id=?", (tweet_id,))
     db.commit()
 
     return redirect(url_for("reported_tweets"))
