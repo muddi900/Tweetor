@@ -1,20 +1,20 @@
 {% extends "layout.html" %}
 
-{% block content %}
+{% block title %}@{{ receiver_handle }} {% endblock %}
+
+{% block body %}
   <h1>Direct Messages with {{ receiver_handle }}</h1>
 
-  <form action="{{ url_for('submit_dm', receiver_handle=receiver_handle) }}" method="POST">
-    <label for="content">Message:</label>
-    <input type="text" name="content" id="content" required>
-    <button type="submit">Send</button>
-  </form>
+
 
   <h2>Messages</h2>
-  <ul>
-    {% for message in messages %}
-      <li>
-        <strong>{{ message["sender_handle"] }}:</strong> {{ message["content"] }}
-      </li>
-    {% endfor %}
-  </ul>
+  {% for message in messages|reverse %}
+    {% if message["profane_dm"] == "no" %}
+      <strong>{{ message["sender_handle"] }}:</strong> {{ message["content"] }}
+      <br>
+    {% endif %}
+  {% endfor %}
+  <form action="{{ url_for('submit_dm', receiver_handle=receiver_handle) }}" method="POST">
+    <input type="text" name="content" id="content" required placeholder="Message @{{ receiver_handle }}">
+  </form>
 {% endblock %}

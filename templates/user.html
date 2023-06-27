@@ -29,10 +29,13 @@
             {% endif %}
           </button>
         </form>
+        
+        <!-- Start DM button -->
+        <a href="{{ url_for('direct_messages', receiver_handle=user.handle) }}" class="dm-button">Start DM</a>
       {% endif %}
     </div>
   </div>
-
+  
   <h2>Tweets</h2>
   <ul>
     {% for tweet in tweets %}

@@ -288,3 +288,22 @@ body {
 .form-container .btn:hover, .open-button:hover {
   opacity: 1;
 }
+.search-form button {
+  all: unset;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+}
+
+.search-form button svg {
+  color: #fff;
+  fill: currentColor;
+  width: 24px;
+  height: 24px;
+  padding: 10px;
+}
+
+hr {
+  margin-top: 0rem;
+  margin-bottom: 0rem;
+}

@@ -30,6 +30,12 @@
         <a href="{{ url_for('search') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="material-symbols:search"></span></a>
         <a href="{{ url_for('logout') }}" class="w3-bar-item w3-button" style="color: white;"><span class="iconify" data-icon="ci:exit"></span></a>
         {% block admin_buttons %}{% endblock %}
+        <hr>
+        <div>
+          {% for dm in engaged_dms %}
+            <a href="{{ url_for('direct_messages', receiver_handle=dm['receiver_handle']) }}" style="color: white;margin-bottom: 0rem !important;margin-top:0rem !important;" class="w3-bar-item w3-button">{{ dm['receiver_handle'] }}</a>
+          {% endfor %}
+        </div>
       {% endif %}
     </div>
   </div>
