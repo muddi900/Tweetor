@@ -47,15 +47,6 @@
     </div>
   </div>
 {% endfor %}
-...
-<h3>Direct Messages</h3>
-<ul>
-  {% for dm in engaged_dms %}
-    <li>
-      <a href="{{ url_for('direct_messages', receiver_handle=dm['receiver_handle']) }}">{{ dm['receiver_handle'] }}</a>
-    </li>
-  {% endfor %}
-</ul>
 
 {% if turbo %}
 <script>

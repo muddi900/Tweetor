@@ -109,6 +109,20 @@ def get_db():
         db.row_factory = sqlite3.Row
     return db
 
+def add_profanity_dm_column_if_not_exists():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("PRAGMA table_info(direct_messages)")
+        columns = cursor.fetchall()
+        column_names = [column[1] for column in columns]
+
+        if 'profane_dm' not in column_names:
+            cursor.execute("ALTER TABLE direct_messages ADD COLUMN profane_dm TEXT")
+            db.commit()
+            print("profane_dm column added to the direct_messages table")
+
+
 def add_profanity_column_if_not_exists():
     with app.app_context():
         db = get_db()
@@ -158,10 +172,11 @@ with sqlite3.connect(DATABASE) as conn:
             sender_handle TEXT NOT NULL,
             receiver_handle TEXT NOT NULL,
             content TEXT,
+            profane_dm TEXT NOT NULL,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-
+add_profanity_dm_column_if_not_exists()
 with sqlite3.connect(DATABASE) as conn:
     conn.execute(
         """
@@ -230,24 +245,43 @@ create_admin_if_not_exists()
 def row_to_dict(row):
     return {col[0]: row[idx] for idx, col in enumerate(row.description)}
 
+def get_engaged_direct_messages(user_handle):
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        SELECT DISTINCT receiver_handle FROM direct_messages
+        WHERE sender_handle = ?
+        UNION
+        SELECT DISTINCT sender_handle FROM direct_messages
+        WHERE receiver_handle = ?
+    """, (user_handle, user_handle))
+
+    engaged_dms = cursor.fetchall()
+    return engaged_dms
+
+
 @app.route("/")
 def home() -> Response:
     db = get_db()
-    cursor = db.cursor()
-    
+    cursor = db.cursor()    
     if "username" in session and session["handle"] == "admin":
         cursor.execute("SELECT * FROM tweets ORDER BY timestamp DESC")
     else:
         cursor.execute("SELECT * FROM tweets WHERE profane_tweet = 'no' ORDER BY timestamp DESC")
-    
+          
     tweets = cursor.fetchall()
+
     if "username" in session:
-        cursor = db.cursor()
-        cursor.execute("SELECT turbo FROM users WHERE handle = ?", (session["handle"], ))
-        if cursor.fetchone()["turbo"]==1:
-            return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=True)
-        return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=False)
-    return render_template("home.html", tweets=tweets, loggedIn=("username" in session), turbo=False)
+        user_handle = session["handle"]
+        engaged_dms = get_engaged_direct_messages(user_handle)
+
+        cursor.execute("SELECT turbo FROM users WHERE handle = ?", (user_handle, ))
+        turbo = cursor.fetchone()["turbo"] == 1
+
+        return render_template("home.html", tweets=tweets, loggedIn=True, turbo=turbo, engaged_dms=engaged_dms)
+    else:
+        return render_template("home.html", tweets=tweets, loggedIn=False, turbo=False)
 
 @app.route("/submit_tweet", methods=["POST"])
 def submit_tweet() -> Response:
@@ -347,19 +381,6 @@ def login() -> Response:
         return redirect("/")
     return render_template("login.html")
 
-@app.route('/notifications')
-def notifications() -> Response:
-    # Check if user is logged in
-    if "username" not in session:
-        return render_template("error.html", error="You were not logged in.")
-    conn = get_db()
-    c = conn.cursor()
-
-    # Get the notifications
-    c.execute("SELECT * FROM notifications WHERE user=?", (session["userHandle"], ))
-    notices = c.fetchall()
-
-    return render_template("notifications.html", notices=notices)
 
 
 @app.route('/tweets/<tweet_id>')
@@ -526,7 +547,12 @@ def profanity() -> Response:
     cursor = db.cursor()
     cursor.execute("SELECT * FROM tweets WHERE profane_tweet = 'yes' ORDER BY timestamp DESC")
     profane_tweet = cursor.fetchall()
-    return render_template("profanity.html", profane_tweet=profane_tweet, loggedIn=("username" in session))
+    cursor.execute("""
+        SELECT * FROM direct_messages WHERE profane_dm = "yes"
+    """)
+    profane_dm = cursor.fetchall()
+
+    return render_template("profanity.html", profane_tweet=profane_tweet, profane_dm=profane_dm)
 
 def get_like_count(tweet_id):
     db = get_db()
@@ -629,7 +655,7 @@ def reported_tweets():
 
     return render_template("reported_tweets.html", reports=reports)
 
-@app.route("/dm/<receiver_handle>")
+@app.route('/dm/<receiver_handle>')
 def direct_messages(receiver_handle):
     if "username" not in session:
         return render_template("error.html", error="You are not logged in.")
@@ -642,13 +668,13 @@ def direct_messages(receiver_handle):
     cursor.execute("""
         SELECT * FROM direct_messages
         WHERE (sender_handle = ? AND receiver_handle = ?)
-        OR (sender_handle = ? AND receiver_handle = ?)
+        OR (sender_handle = ? AND receiver_handle = ?) AND profane_dm = 'no'
         ORDER BY timestamp DESC
     """, (sender_handle, receiver_handle, receiver_handle, sender_handle))
 
     messages = cursor.fetchall()
 
-    return render_template("direct_messages.html", messages=messages, receiver_handle=receiver_handle)
+    return render_template("direct_messages.html", messages=messages, receiver_handle=receiver_handle, loggedIn="username"in session)
 
 @app.route("/submit_dm/<receiver_handle>", methods=["POST"])
 def submit_dm(receiver_handle):
@@ -658,17 +684,41 @@ def submit_dm(receiver_handle):
     sender_handle = session["handle"]
     content = request.form["content"]
 
+    sightengine_result = is_profanity(content)
+    profane_dm = "no"
+
+    if sightengine_result['status'] == 'success' and len(sightengine_result['profanity']['matches']) > 0:
+        profane_dm = "yes"
+
     db = get_db()
     cursor = db.cursor()
 
     cursor.execute("""
-        INSERT INTO direct_messages (sender_handle, receiver_handle, content)
-        VALUES (?, ?, ?)
-    """, (sender_handle, receiver_handle, content))
+        INSERT INTO direct_messages (sender_handle, receiver_handle, content, profane_dm)
+        VALUES (?, ?, ?, ?)
+    """, (sender_handle, receiver_handle, content, profane_dm))
 
     db.commit()
 
-    return redirect(url_for("direct_messages", receiver_handle=receiver_handle))
+    return redirect(url_for("direct_messages", receiver_handle=receiver_handle, loggedIn="username"in session))
+
+@app.route('/notifications')
+def notifications():
+       def generate_notifications():
+           # Logic to generate notifications
+           yield 'data: New direct message received\n\n'  # Example notification message
+
+       return Response(generate_notifications(), mimetype='text/event-stream')
+
+def get_notifications():
+       # Logic to fetch notifications from data source in the desired order
+       notifications = [
+           'New direct message received',
+           'You have a new notification',
+           'Your post has been liked',
+           ...
+       ]
+       return notifications
 
 if __name__ == "__main__":
     app.run(debug=False)
