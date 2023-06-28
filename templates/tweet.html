@@ -17,10 +17,14 @@
     {% endif %}
     {% if loggedIn %}
       <button onclick="openReportModal('{{ tweet.id }}')" style="float: right; border: none;"><span class="iconify" data-icon="mdi:report" data-width="25"></span></button>
-    {% endif %}    
+    {% endif %}
   </div>
   <div class="tweet-content">
     <a href="/tweets/{{ tweet.id }}">{{ tweet.content|format_tweet }} {{ tweet.hashtag }}</a>
+    {% if tweet.meme_link %}
+      <br>
+      <a href="/tweets/{{ tweet.id }}"><img src="{{ tweet.meme_link }}" alt="{{ tweet.content }}"></a>
+    {% endif %}
   </div>
   <button class="like-btn" data-tweet-id="{{ tweet.id }}" style="border: none; margin: 0px;"><span class="iconify" data-icon="bx:like" data-width="27"></span></button>
 </div>
