@@ -285,7 +285,9 @@ def home() -> Response:
 
 @app.route("/submit_tweet", methods=["POST"])
 def submit_tweet() -> Response:
-    content = request.form["content"]
+    content = str(request.form["content"])
+    if content.strip() == "":
+        return render_template("error.html", error="Message was blank.")
     if len(content) > 10000:
         return render_template("error.html", error="Message was too long.")
     if "username" not in session:
