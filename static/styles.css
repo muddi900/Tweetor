@@ -320,4 +320,23 @@ body {
   transform: translateY(-10px);
   border: #000;
   border: 1px;
+
+.search-form button {
+  all: unset;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+}
+
+.search-form button svg {
+  color: #fff;
+  fill: currentColor;
+  width: 24px;
+  height: 24px;
+  padding: 10px;
+}
+
+hr {
+  margin-top: 0rem;
+  margin-bottom: 0rem;
 }

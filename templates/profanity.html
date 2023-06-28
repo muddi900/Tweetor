@@ -19,6 +19,14 @@
     </div>
   </div>
 {% endfor %}
+<h1>Profane Direct Messages</h1>
+<ul>
+  {% for message in profane_dm %}
+    <li>
+      <strong>{{ message["sender_handle"] }}:</strong> {{ message["content"] }}
+    </li>
+  {% endfor %}
+</ul>
 
 {% if turbo %}
 <script>
