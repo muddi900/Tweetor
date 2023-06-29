@@ -559,7 +559,7 @@ def follow_user():
 
         db.commit()
 
-        return redirect(f'/user/{following_username}')
+        return redirect(url_for("user_profile", username=following_username))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
